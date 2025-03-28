@@ -1,7 +1,6 @@
 ## HabitHop UI WebApp
 
 # cmd and dependencies:
-<!-- * npx create-react-app ./ -->
 * npm install -D tailwind postcss autoprefixer
 * npx tailwindcss init -p
 
