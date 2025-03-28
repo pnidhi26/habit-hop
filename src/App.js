@@ -21,6 +21,7 @@ const HomePage = () => (
       description="Scientific studies show that tracking your progress can significantly boost your chances of successfully building and maintaining habits. 
       Fuel your journey with insightful metrics, celebrate your milestones, and stay motivated on your path to success.
       Analytics Dashboard, Leaderboard, Manage Habit Page etc."
+      mockupImg={assets.feature}
       banner="banner02"
     />
     
