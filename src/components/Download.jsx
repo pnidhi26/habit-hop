@@ -1,5 +1,5 @@
 import React from 'react';
-
+import { Link } from 'react-router-dom';
 import styles from '../styles/Global';
 import assets from '../assets';
 
@@ -13,9 +13,16 @@ const Download = () => {
           <p className={`${styles.pText} ${styles.blackText}`}>Harness the power of our personalized habit tracker app to streamline your everyday routines and achieve your goals.</p>
         </div>
         
-        <button className={styles.btnPrimary} href="./login">Join a New Habit Today</button>
-        <br></br>
-        <br></br>
+        <Link 
+          to="/login" 
+          className={`${styles.btnPrimary} inline-block`}
+        >
+          Join a New Habit Today
+        </Link>
+        
+        <br />
+        <br />
+        
         <div className={styles.flexCenter}>
           <img 
             src={assets.scene}
@@ -28,4 +35,4 @@ const Download = () => {
   )
 }
 
-export default Download
+export default Download;
