@@ -1,8 +1,7 @@
 ## HabitHop UI WebApp
 
 # cmd and dependencies:
-* npm install -D tailwind postcss autoprefixer
-* npx tailwindcss init -p
+* npm install 
 
 # Run server on local:
 * npm start
