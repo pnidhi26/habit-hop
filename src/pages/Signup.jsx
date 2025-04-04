@@ -1,5 +1,5 @@
-// Signup.jsx
 import React, { useState } from 'react';
+import '../styles/Signup.css';
 
 const Signup = () => {
   const [formData, setFormData] = useState({
@@ -9,35 +9,151 @@ const Signup = () => {
     confirmPassword: ''
   });
 
+  const [errors, setErrors] = useState({});
+
+  const [isLoading, setIsLoading] = useState(false);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+
+    setFormData((prev) => ({
       ...prev,
       [name]: value
     }));
+
+    validateField(name, value);
   };
 
-  const handleSubmit = (e) => {
+  const validateField = (name, value) => {
+    let error = '';
+
+    switch (name) {
+      case 'username':
+        if (!value.trim()) error = 'Username is required';
+        break;
+      case 'email':
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) error = 'Invalid email address';
+        break;
+      case 'password':
+        if (value.length < 8) error = 'Password must be at least 8 characters';
+        // TODO: add more validation
+        break;
+      case 'confirmPassword':
+        if (value !== formData.password) error = 'Passwords do not match';
+        break;
+      default:
+        break;
+    }
+
+    setErrors((prev) => ({
+      ...prev,
+      [name]: error
+    }));
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Add signup logic here
-    console.log('Signup attempted', formData);
-  };
 
+    // Validate all fields first
+    const newErrors = {};
+    Object.entries(formData).forEach(([name, value]) => {
+      validateField(name, value);
+      if (errors[name]) {
+        newErrors[name] = errors[name];
+      }
+    });
+
+    // Don't proceed with fetch if there are validation errors
+    if (Object.values(newErrors).some((err) => err)) return;
+
+    try {
+      // Show loading state (you can add a loading state if needed)
+      // setIsLoading(true);
+
+      const response = await fetch('your-backend-url/api/signup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          username: formData.username,
+          email: formData.email,
+          password: formData.password
+        }),
+      });
+
+      if (!response.ok) {
+        // Handle server errors (e.g., email already exists)
+        const errorData = await response.json();
+        console.error('Signup failed:', errorData);
+
+        // Update error state based on server response
+        if (errorData.field && errorData.message) {
+          setErrors(prev => ({
+            ...prev,
+            [errorData.field]: errorData.message
+          }));
+        } else {
+          // General error
+          setErrors(prev => ({
+            ...prev,
+            general: errorData.message || 'Signup failed. Please try again.'
+          }));
+        }
+        return;
+      }
+
+      // Handle successful signup
+      const data = await response.json();
+      console.log('Signup successful:', data);
+
+
+      window.location.href = '/login';
+
+      // 3. Show success message then clear the form
+      alert('Account created successfully! Please log in.');
+
+      //Reset form 
+      setFormData({ username: '', email: '', password: '', confirmPassword: '' });
+      setErrors({});
+
+    } catch (error) {
+      console.error('Error during signup request:', error);
+      setErrors(prev => ({
+        ...prev,
+        general: 'Network error. Please try again later.'
+      }));
+    } finally {
+      // setIsLoading(false); // Hide loading state
+    }
+  };
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-          Create your HabitHop Account
-        </h2>
+    <div className="signup-container">
+      <a href="/" className="back-button">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M19 12H5M12 19l-7-7 7-7" />
+        </svg>
+        <span className="text-2xl font-bold text-white ml-2">Back HabitHop</span>
+      </a>
+
+      {/* Wave background */}
+      <div className="wave-container">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320">
+          <path fill="#ffffff" fillOpacity="1" d="M0,224L80,213.3C160,203,320,181,480,181.3C640,181,800,203,960,213.3C1120,224,1280,224,1360,224L1440,224L1440,320L1360,320C1280,320,1120,320,960,320C800,320,640,320,480,320C320,320,160,320,80,320L0,320Z"></path>
+          <path fill="#f3f7fd" fillOpacity="0.6" d="M0,192L60,186.7C120,181,240,171,360,186.7C480,203,600,245,720,240C840,235,960,181,1080,176C1200,171,1320,213,1380,234.7L1440,256L1440,320L1380,320C1320,320,1200,320,1080,320C960,320,840,320,720,320C600,320,480,320,360,320C240,320,120,320,60,320L0,320Z"></path>
+        </svg>
       </div>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
-          <form className="space-y-6" onSubmit={handleSubmit}>
-            <div>
-              <label htmlFor="username" className="block text-sm font-medium text-gray-700">
-                Username
-              </label>
+      <div className="signup-header">
+        <h2>Create your HabitHop Account</h2>
+        <p>Organize, Execute, Triumph</p>
+      </div>
+
+      <div className="form-container">
+        <div className="form-card">
+          <form onSubmit={handleSubmit}>
+            <div className="form-group">
+              <label htmlFor="username">Username</label>
               <input
                 id="username"
                 name="username"
@@ -45,14 +161,13 @@ const Signup = () => {
                 required
                 value={formData.username}
                 onChange={handleChange}
-                className="mt-1 block w-full py-2 px-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                className={errors.username ? 'error-input' : ''}
               />
+              {errors.username && <p className="error-message">{errors.username}</p>}
             </div>
 
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                Email address
-              </label>
+            <div className="form-group">
+              <label htmlFor="email">Email address</label>
               <input
                 id="email"
                 name="email"
@@ -61,14 +176,13 @@ const Signup = () => {
                 required
                 value={formData.email}
                 onChange={handleChange}
-                className="mt-1 block w-full py-2 px-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                className={errors.email ? 'error-input' : ''}
               />
+              {errors.email && <p className="error-message">{errors.email}</p>}
             </div>
 
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                Password
-              </label>
+            <div className="form-group">
+              <label htmlFor="password">Password</label>
               <input
                 id="password"
                 name="password"
@@ -76,14 +190,13 @@ const Signup = () => {
                 required
                 value={formData.password}
                 onChange={handleChange}
-                className="mt-1 block w-full py-2 px-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                className={errors.password ? 'error-input' : ''}
               />
+              {errors.password && <p className="error-message">{errors.password}</p>}
             </div>
 
-            <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
-                Confirm Password
-              </label>
+            <div className="form-group">
+              <label htmlFor="confirmPassword">Confirm Password</label>
               <input
                 id="confirmPassword"
                 name="confirmPassword"
@@ -91,17 +204,21 @@ const Signup = () => {
                 required
                 value={formData.confirmPassword}
                 onChange={handleChange}
-                className="mt-1 block w-full py-2 px-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                className={errors.confirmPassword ? 'error-input' : ''}
               />
+              {errors.confirmPassword && (
+                <p className="error-message">{errors.confirmPassword}</p>
+              )}
             </div>
 
-            <div>
-              <button
-                type="submit"
-                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-              >
-                Sign Up
+            <div className="form-group">
+              <button type="submit" className="submit-button" disabled={isLoading}>
+                {isLoading ? 'Creating Account...' : 'Start Building Habits Today'}
               </button>
+            </div>
+
+            <div className="login-link">
+              <p>Already have an account? <a href="/login">Login</a></p>
             </div>
           </form>
         </div>
