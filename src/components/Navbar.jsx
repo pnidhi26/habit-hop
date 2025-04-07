@@ -1,30 +1,67 @@
 import React from 'react';
 import { Link, useMatch, useResolvedPath } from "react-router-dom";
+import { Drawer, List, ListItem, ListItemButton, ListItemText, Divider, ListItemIcon, Box } from '@mui/material';
+import DashboardIcon from '@mui/icons-material/Dashboard';
+import AssignmentIcon from '@mui/icons-material/Assignment';
+import CalendarMonth from '@mui/icons-material/CalendarMonth';
+import AnalyticsIcon from '@mui/icons-material/Analytics';
+import PeopleIcon from '@mui/icons-material/People';
+import SettingsIcon from '@mui/icons-material/Settings';
+
+const drawerWidth = '20%';
 
 export default function Navbar() {
   return (
-    <div className="bg-gray-800 text-white w-1/5 min-h-screen p-4 flex flex-col">
-      <ul className="space-y-4">
-        <CustomLink to="/dashboard">Dashboard</CustomLink>
-        <CustomLink to="/habits">Habits</CustomLink>
-        <CustomLink to="/plans">Plans</CustomLink>
-        <CustomLink to="/analytics">Analytics</CustomLink>
-        <CustomLink to="/community">Community</CustomLink>
-        <CustomLink to="/settings">Settings</CustomLink>
-      </ul>
-    </div>
+    <Drawer
+      variant="permanent"
+      sx={{
+        width: drawerWidth,
+        flexShrink: 0,
+        position: 'fixed',
+        top: 0,
+        height: '100vh',
+        [`& .MuiDrawer-paper`]: { 
+          width: drawerWidth, 
+          boxSizing: 'border-box', 
+          backgroundColor: '#1a202c', 
+          color: 'white',
+          height: 'calc(100vh - 64px)',
+          marginTop: '64px'
+        },
+      }}
+    >
+      <Box sx={{ overflow: 'auto' }}>
+        <List>
+          <CustomLink to="/dashboard" label="Dashboard" icon={<DashboardIcon />} />
+          <CustomLink to="/habits" label="Habits" icon={<AssignmentIcon />} />
+          <CustomLink to="/plans" label="Plans" icon={<CalendarMonth />} />
+          <CustomLink to="/analytics" label="Analytics" icon={<AnalyticsIcon />} />
+          <CustomLink to="/community" label="Community" icon={<PeopleIcon />} />
+          <CustomLink to="/settings" label="Settings" icon={<SettingsIcon />} />
+        </List>
+      </Box>
+    </Drawer>
   )
 }
 
-function CustomLink({ to, children, ...props }) {
-  const resolvedPath = useResolvedPath(to)
-  const isActive = useMatch({ path: resolvedPath.pathname, end: true })
+function CustomLink({ to, label, icon }) {
+  const resolvedPath = useResolvedPath(to);
+  const isActive = useMatch({ path: resolvedPath.pathname, end: true });
 
   return (
-    <li className={isActive ? "text-blue-400" : ""}>
-      <Link to={to} {...props}>
-        {children}
-      </Link>
-    </li>
-  )
+    <ListItem disablePadding>
+      <ListItemButton
+        component={Link}
+        to={to}
+        selected={isActive}
+        sx={{
+          color: isActive ? '#90caf9' : 'white',
+          '&:hover': { backgroundColor: '#2d3748' }
+        }}
+      >
+        {icon && <ListItemIcon sx={{ color: isActive ? '#90caf9' : 'white' }}>{icon}</ListItemIcon>}
+        <ListItemText primary={label} />
+      </ListItemButton>
+    </ListItem>
+  );
 }
