@@ -67,8 +67,7 @@ const Signup = () => {
     if (Object.values(newErrors).some((err) => err)) return;
 
     try {
-      // Show loading state (you can add a loading state if needed)
-      // setIsLoading(true);
+      setIsLoading(true);
 
       const response = await fetch('your-backend-url/api/signup', {
         method: 'POST',
@@ -124,7 +123,7 @@ const Signup = () => {
         general: 'Network error. Please try again later.'
       }));
     } finally {
-      // setIsLoading(false); // Hide loading state
+      setIsLoading(false);
     }
   };
   return (
