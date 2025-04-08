@@ -44,7 +44,7 @@ const AppLayout = () => (
     <Topbar />
     <div className="flex h-full"> 
       <Navbar />
-      <div className="flex-1 overflow-y-auto p-4 bg-gray-100">
+      <div className="flex-1 overflow-y-auto p-4 bg-gray-100" style={{ marginLeft: '20%' }}>
         <Routes>
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/habits" element={<Habits />} />
