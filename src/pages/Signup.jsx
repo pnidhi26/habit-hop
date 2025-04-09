@@ -35,8 +35,11 @@ const Signup = () => {
         if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) error = 'Invalid email address';
         break;
       case 'password':
-        if (value.length < 8) error = 'Password must be at least 8 characters';
-        // TODO: add more validation
+        if (value.length < 8) {
+          error = 'Password must be at least 8 characters';
+        } else if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/.test(value)) {
+          error = 'Password must include uppercase, lowercase, and a number';
+        }
         break;
       case 'confirmPassword':
         if (value !== formData.password) error = 'Passwords do not match';
@@ -67,10 +70,9 @@ const Signup = () => {
     if (Object.values(newErrors).some((err) => err)) return;
 
     try {
-      // Show loading state (you can add a loading state if needed)
-      // setIsLoading(true);
+      setIsLoading(true);
 
-      const response = await fetch('your-backend-url/api/signup', {
+      const response = await fetch('https://habitstacker-821782230505.us-west1.run.app/api/auth/signup', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -124,7 +126,7 @@ const Signup = () => {
         general: 'Network error. Please try again later.'
       }));
     } finally {
-      // setIsLoading(false); // Hide loading state
+      setIsLoading(false);
     }
   };
   return (

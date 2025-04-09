@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useMatch, useResolvedPath } from "react-router-dom";
-import { Drawer, List, ListItem, ListItemButton, ListItemText, Divider, ListItemIcon, Box } from '@mui/material';
+import { Drawer, List, ListItem, ListItemButton, ListItemText, ListItemIcon, Box } from '@mui/material';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import CalendarMonth from '@mui/icons-material/CalendarMonth';
