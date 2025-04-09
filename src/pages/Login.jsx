@@ -10,13 +10,13 @@ const Login = () => {
     // Add login logic here
     console.log('Login attempted', { email, password });
     try {
-      const response = await fetch('backend-url/api/login', {
+      const response = await fetch('https://habitstacker-821782230505.us-west1.run.app/api/auth/signin', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ email, password }),
-        credentials: 'include', // Include cookies if needed for authentication
+        credentials: 'include',
       });
   
       if (!response.ok) {
@@ -29,9 +29,6 @@ const Login = () => {
       // Handle successful login
       const data = await response.json();
       console.log('Login successful:', data);
-      
-      // authentication token or a cookie
-      // localStorage.setItem('token', data.token);
       
       // Redirect to dashboard
       window.location.href = '/dashboard';
