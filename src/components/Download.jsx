@@ -14,10 +14,10 @@ const Download = () => {
         </div>
         
         <Link 
-          to="/login" 
+          to="/dashboard" 
           className={`${styles.btnPrimary} inline-block`}
         >
-          Join a New Habit Today
+          Skip to Dashboard
         </Link>
         
         <br />
