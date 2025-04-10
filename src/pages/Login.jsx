@@ -1,41 +1,27 @@
-// Login.jsx
+// src/pages/Login.jsx
 import React, { useState } from 'react';
+import { login } from '../api/auth';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    // Add login logic here
-    console.log('Login attempted', { email, password });
+    setIsLoading(true);
+    setError('');
     try {
-      const response = await fetch('https://habitstacker-821782230505.us-west1.run.app/api/auth/signin', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
-        credentials: 'include',
-      });
-  
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error('Login failed:', errorData);
-        // error state here 
-        return;
-      }
-  
-      // Handle successful login
-      const data = await response.json();
-      console.log('Login successful:', data);
-      
-      // Redirect to dashboard
+      const responseData = await login({ email, password });
+      console.log('Login successful:', responseData);
+      localStorage.setItem('authToken', responseData.token); // Store the token
       window.location.href = '/dashboard';
-      
     } catch (error) {
-      console.error('Error during login request:', error);
-      // Handle network errors or exceptions
+      console.error('Login failed:', error);
+      setError(error.message || 'Invalid email or password.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -47,7 +33,7 @@ const Login = () => {
         </svg>
         <span className="text-2xl font-bold text-white ml-2">Back HabitHop</span>
       </a>
-      
+
       {/* Wave background */}
       <div className="wave-container">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320">
@@ -57,13 +43,14 @@ const Login = () => {
       </div>
 
       <div className="signup-header">
-        <h2>Create your HabitHop Account</h2>
-        <p>Organize, Execute, Triumph</p>
+        <h2>Welcome Back to HabitHop</h2>
+        <p>Continue your journey towards better habits</p>
       </div>
 
       <div className="form-container">
         <div className="form-card">
           <form onSubmit={handleSubmit}>
+            {error && <p className="error-message">{error}</p>}
             <div className="form-group">
               <label htmlFor="email">Email address</label>
               <input
@@ -90,8 +77,8 @@ const Login = () => {
             </div>
 
             <div className="form-group">
-              <button type="submit" className="submit-button">
-                Continue Building Habits
+              <button type="submit" className="submit-button" disabled={isLoading}>
+                {isLoading ? 'Logging In...' : 'Continue Building Habits'}
               </button>
             </div>
 

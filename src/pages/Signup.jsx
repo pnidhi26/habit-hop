@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import '../styles/Signup.css';
+import { signup } from '../api/auth'; // Import the signup function
 
 const Signup = () => {
   const [formData, setFormData] = useState({
@@ -10,23 +11,16 @@ const Signup = () => {
   });
 
   const [errors, setErrors] = useState({});
+  const [isLoading, setIsLoading] = useState(false); // 'isLoading' is now used
 
-  const [isLoading, setIsLoading] = useState(false);
-
-  const handleChange = (e) => {
+  const handleChange = (e) => { // 'handleChange' is now used
     const { name, value } = e.target;
-
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value
-    }));
-
+    setFormData((prev) => ({ ...prev, [name]: value }));
     validateField(name, value);
   };
 
   const validateField = (name, value) => {
     let error = '';
-
     switch (name) {
       case 'username':
         if (!value.trim()) error = 'Username is required';
@@ -47,17 +41,12 @@ const Signup = () => {
       default:
         break;
     }
-
-    setErrors((prev) => ({
-      ...prev,
-      [name]: error
-    }));
+    setErrors((prev) => ({ ...prev, [name]: error }));
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e) => { // 'handleSubmit' is now used
     e.preventDefault();
 
-    // Validate all fields first
     const newErrors = {};
     Object.entries(formData).forEach(([name, value]) => {
       validateField(name, value);
@@ -66,69 +55,35 @@ const Signup = () => {
       }
     });
 
-    // Don't proceed with fetch if there are validation errors
     if (Object.values(newErrors).some((err) => err)) return;
 
+    setIsLoading(true); // Set loading state to true when the request starts
     try {
-      setIsLoading(true);
-
-      const response = await fetch('https://habitstacker-821782230505.us-west1.run.app/api/auth/signup', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          username: formData.username,
-          email: formData.email,
-          password: formData.password
-        }),
-      });
-
-      if (!response.ok) {
-        // Handle server errors (e.g., email already exists)
-        const errorData = await response.json();
-        console.error('Signup failed:', errorData);
-
-        // Update error state based on server response
-        if (errorData.field && errorData.message) {
-          setErrors(prev => ({
-            ...prev,
-            [errorData.field]: errorData.message
-          }));
-        } else {
-          // General error
-          setErrors(prev => ({
-            ...prev,
-            general: errorData.message || 'Signup failed. Please try again.'
-          }));
-        }
-        return;
-      }
-
-      // Handle successful signup
-      const data = await response.json();
-      console.log('Signup successful:', data);
-
-
-      window.location.href = '/login';
-
-      // 3. Show success message then clear the form
+      const signupData = {
+        username: formData.username,
+        email: formData.email,
+        password: formData.password,
+      };
+      const responseData = await signup(signupData);
+      console.log('Signup successful:', responseData);
       alert('Account created successfully! Please log in.');
-
-      //Reset form 
+      window.location.href = '/login';
       setFormData({ username: '', email: '', password: '', confirmPassword: '' });
       setErrors({});
-
     } catch (error) {
-      console.error('Error during signup request:', error);
-      setErrors(prev => ({
-        ...prev,
-        general: 'Network error. Please try again later.'
-      }));
+      console.error('Signup failed:', error);
+      if (error.field && error.message) {
+        setErrors(prev => ({ ...prev, [error.field]: error.message }));
+      } else if (error.message) {
+        setErrors(prev => ({ ...prev, general: error.message || 'Signup failed. Please try again.' }));
+      } else {
+        setErrors(prev => ({ ...prev, general: 'Network error. Please try again later.' }));
+      }
     } finally {
-      setIsLoading(false);
+      setIsLoading(false); // Set loading state back to false when the request finishes
     }
   };
+
   return (
     <div className="signup-container">
       <a href="/" className="back-button">
