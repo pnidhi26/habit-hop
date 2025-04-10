@@ -1,21 +1,16 @@
 [build]
-  command = "npm run build"  
-  publish = "build"  # Make sure this matches your build output directory
+  command = "npm run build"
+  publish = "build"
 
-# Handle client-side routing
+# First, try to serve the requested file directly
+[[redirects]]
+  from = "/static/*"
+  to = "/static/:splat"
+  status = 200
+
+# Then, handle React routing for all other paths
 [[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
   force = true
-
-# Add proper MIME types
-[[headers]]
-  for = "/*.json"
-    [headers.values]
-    Content-Type = "application/json"
-
-[[headers]]
-  for = "/*.css"
-    [headers.values]
-    Content-Type = "text/css"
