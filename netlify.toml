@@ -1,19 +1,21 @@
 [build]
-  command = "npm run build"
-  publish = "build"  # or "dist" if you're using Vite
+  command = "npm run build"  
+  publish = "build"  # Make sure this matches your build output directory
 
-# This handles client-side routing
+# Handle client-side routing
 [[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
   force = true
 
-# Headers to improve security and performance (optional but recommended)
+# Add proper MIME types
 [[headers]]
-  for = "/*"
-  [headers.values]
-    X-Frame-Options = "DENY"
-    X-XSS-Protection = "1; mode=block"
-    X-Content-Type-Options = "nosniff"
-    Referrer-Policy = "no-referrer-when-downgrade"
+  for = "/*.json"
+    [headers.values]
+    Content-Type = "application/json"
+
+[[headers]]
+  for = "/*.css"
+    [headers.values]
+    Content-Type = "text/css"
