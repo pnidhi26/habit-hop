@@ -1,0 +1,16 @@
+[build]
+  command = "npm run build"
+  publish = "build"
+
+# First, try to serve the requested file directly
+[[redirects]]
+  from = "/static/*"
+  to = "/static/:splat"
+  status = 200
+
+# Then, handle React routing for all other paths
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+  force = true
