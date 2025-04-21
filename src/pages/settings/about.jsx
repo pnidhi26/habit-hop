@@ -9,43 +9,43 @@ import avatar6 from '../../assets/temp_avatar.png';
 
 const teamMembers = [
   {
-    name: 'Prakash Nidhi Verma',
-    role: 'x',
-    email: 'pnverma@csuchico.edu',
-    G_id: 'pnidhi26',
+    name: 'Boxi Chen',
+    role: 'Team Lead & Scrum Master',
+    email: 'Bchen1@csuchico.edu',
+    G_id: 'K3rpa',
     avatar: avatar1
   },
   {
-    name: 'Dengtai Wang',
-    role: 'x',
-    email: 'dwang2@csuchico.edu',
-    G_id: 'wdtt057',
+    name: 'Prakash Nidhi Verma',
+    role: 'Lead Developer & Code Reviewer',
+    email: 'pnverma@csuchico.edu',
+    G_id: 'pnidhi26',
     avatar: avatar2
   },
   {
     name: 'Austin Norquist',
-    role: 'x',
+    role: 'Software Engineer',
     email: 'anorquist@csuchico.edu',
     G_id: 'n0rq1',
     avatar: avatar3
   },
   {
-    name: 'Boxi Chen',
-    role: 'x',
-    email: 'Bchen1@csuchico.edu',
-    G_id: 'K3rpa',
+    name: 'Aditi N More',
+    role: 'Software Engineer',
+    email: 'anmore@csuchico.edu',
+    G_id: 'Adidi More',
     avatar: avatar4
   },
   {
-    name: 'Aditi N More',
-    role: 'x',
-    email: 'anmore@csuchico.edu',
-    G_id: 'Adidi More',
+    name: 'Dengtai Wang',
+    role: 'Software Engineer',
+    email: 'dwang2@csuchico.edu',
+    G_id: 'wdtt057',
     avatar: avatar5
   },
   {
     name: 'Brian Herring',
-    role: 'x',
+    role: 'Product Owner',
     email: 'BHerring@csuchico.edu',
     G_id: 'herringbd61',
     avatar: avatar6
@@ -85,14 +85,30 @@ export default function About() {
             />
           </div>
           <div className="w-[65%]">
-            <h2 className="text-3xl font-bold mb-4">Philosophy</h2>
+            <h2 className="text-3xl font-bold mb-4">About HabitHop</h2>
             <blockquote className="text-lg italic text-green-800 border-l-4 pl-4 border-green-600 mb-4">
-              "Food Studio is about sharing stories of people that believe in good and honest food."
+              "HabitHop is about helping people design the life they want — one habit at a time."
             </blockquote>
+            <p className="text-gray-700 mb-4">
+              At HabitHop, we believe that great habits create great lives. Our mission is to empower individuals to build, schedule, and track their daily routines in a way that's structured, motivating, and enjoyable.
+            </p>
+            <p className="text-gray-700 mb-4">
+              Whether you're a seasoned productivity enthusiast or just beginning your habit journey, HabitHop offers a supportive environment where routines become rituals — and consistency becomes second nature.
+            </p>
+            <ul className="list-disc list-inside text-gray-700 mb-4 space-y-1">
+              <li>A smooth onboarding experience with easy account creation and login</li>
+              <li>A curated library of 12+ meaningful habits with images and descriptions</li>
+              <li>Tools to create custom habits, privately or publicly shared</li>
+              <li>A flexible weekly planner using a repeating 7-day template</li>
+              <li>Daily scheduling across morning, midday, and evening blocks</li>
+              <li>Support for scheduling the same habit multiple times per day</li>
+              <li>Detailed tracking of time spent per task and weekly completion</li>
+              <li>Charts showing habit trends across up to 52 weeks</li>
+              <li>A motivational leaderboard and a community sharing space</li>
+              <li>FAQ and Switch Bar to personalize the user experience</li>
+            </ul>
             <p className="text-gray-700">
-              With good and honest food we mean food that both tastes good, has a positive impact on our health,
-              food that’s responsibly produced, food that’s a result of plants and animals being treated well,
-              and food that inspires us.
+              With HabitHop, every day becomes a fresh opportunity to show up for yourself.
             </p>
           </div>
         </div>
