@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useMatch, useResolvedPath } from "react-router-dom";
 import { Drawer, List, ListItem, ListItemButton, ListItemText, ListItemIcon, Box } from '@mui/material';
 import DashboardIcon from '@mui/icons-material/Dashboard';
@@ -7,10 +7,42 @@ import CalendarMonth from '@mui/icons-material/CalendarMonth';
 import AnalyticsIcon from '@mui/icons-material/Analytics';
 import PeopleIcon from '@mui/icons-material/People';
 import SettingsIcon from '@mui/icons-material/Settings';
-
+import defaultIconSettings from '../data/switch_icon';
 const drawerWidth = '20%';
 
+
+const iconMap = {
+  dashboard: <DashboardIcon />,
+  habits: <AssignmentIcon />,
+  plans: <CalendarMonth />,
+  analytics: <AnalyticsIcon />,
+  community: <PeopleIcon />,
+  settings: <SettingsIcon />
+};
+
+const labelMap = {
+  dashboard: 'Dashboard',
+  habits: 'Habits',
+  plans: 'Plans',
+  analytics: 'Analytics',
+  community: 'Community',
+  settings: 'Settings'
+};
+
+
+
 export default function Navbar() {
+  const [iconSettings, setIconSettings] = useState([]);
+
+  useEffect(() => {
+    const stored = localStorage.getItem('iconSettings');
+    if (stored) {
+      setIconSettings(JSON.parse(stored));
+    } else {
+      setIconSettings(defaultIconSettings);
+    }
+  }, []);
+
   return (
     <Drawer
       variant="permanent"
@@ -20,10 +52,10 @@ export default function Navbar() {
         position: 'fixed',
         top: 0,
         height: '100vh',
-        [`& .MuiDrawer-paper`]: { 
-          width: drawerWidth, 
-          boxSizing: 'border-box', 
-          backgroundColor: '#1a202c', 
+        [`& .MuiDrawer-paper`]: {
+          width: drawerWidth,
+          boxSizing: 'border-box',
+          backgroundColor: '#1a202c',
           color: 'white',
           height: 'calc(100vh - 64px)',
           marginTop: '64px'
@@ -32,16 +64,20 @@ export default function Navbar() {
     >
       <Box sx={{ overflow: 'auto' }}>
         <List>
-          <CustomLink to="/dashboard" label="Dashboard" icon={<DashboardIcon />} />
-          <CustomLink to="/habits" label="Habits" icon={<AssignmentIcon />} />
-          <CustomLink to="/plans" label="Plans" icon={<CalendarMonth />} />
-          <CustomLink to="/analytics" label="Analytics" icon={<AnalyticsIcon />} />
-          <CustomLink to="/community" label="Community" icon={<PeopleIcon />} />
-          <CustomLink to="/settings" label="Settings" icon={<SettingsIcon />} />
+          {iconSettings
+            .filter(item => item.visible)
+            .map(item => (
+              <CustomLink
+                key={item.key}
+                to={`/${item.key}`}
+                label={labelMap[item.key]}
+                icon={iconMap[item.key]}
+              />
+            ))}
         </List>
       </Box>
     </Drawer>
-  )
+  );
 }
 
 function CustomLink({ to, label, icon }) {
@@ -65,3 +101,4 @@ function CustomLink({ to, label, icon }) {
     </ListItem>
   );
 }
+
