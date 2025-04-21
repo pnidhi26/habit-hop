@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import sampleProfilePic from '../assets/sampleProfilePic.jpeg';
 import IconButton from '@mui/material/IconButton';
@@ -6,7 +6,17 @@ import LogoutIcon from '@mui/icons-material/Logout';
 
 export default function Topbar() {
   const navigate = useNavigate();
+  const [profileImage, setProfileImage] = useState(sampleProfilePic);
 
+  useEffect(() => {
+    const stored = localStorage.getItem('dummyUser');
+    if (stored) {
+      const user = JSON.parse(stored);
+      if (user.profilePicture) {
+        setProfileImage(user.profilePicture);
+      }
+    }
+  }, []);
   const handleLogout = () => {
     localStorage.clear();
     navigate('/login');
@@ -17,7 +27,7 @@ export default function Topbar() {
       <div className="text-2xl font-bold">HabitHop</div>
       <div className="flex items-center gap-2">
         <img 
-          src={sampleProfilePic} 
+          src={profileImage} 
           alt="User" 
           className="w-10 h-10 rounded-full object-cover"
         />

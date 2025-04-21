@@ -20,12 +20,14 @@ export default function Account() {
 
   const handleReset = () => {
     setForm({ ...user });
+    window.location.reload();
   };
 
   const handleUpdate = () => {
     setUser({ ...form });
     localStorage.setItem('dummyUser', JSON.stringify(form));
     alert('User info updated!');
+    window.location.reload();
   };
 
   const handleImageUpload = (event) => {
