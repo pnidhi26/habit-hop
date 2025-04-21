@@ -1,5 +1,5 @@
 import React from 'react';
-import SettingNavbar from '../components/Setting_Navbar'; // 根据你的项目路径修改
+import SettingNavbar from '../components/Setting_Navbar';
 import { Outlet } from 'react-router-dom';
 
 export default function Settings() {
