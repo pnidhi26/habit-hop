@@ -1,10 +1,14 @@
 import React from 'react';
+import SettingNavbar from '../components/Setting_Navbar';
+import { Outlet } from 'react-router-dom';
 
 export default function Settings() {
   return (
-    <div className="p-6">
-      <h1 className="text-3xl font-bold">Settings</h1>
-      <p>Adjust your application settings here.</p>
+    <div className="flex h-full">
+      <SettingNavbar />
+      <div className="flex-1 p-6 bg-white overflow-y-auto">
+        <Outlet />
+      </div>
     </div>
   );
 }
