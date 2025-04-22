@@ -11,6 +11,12 @@ import Habits from './pages/Habits';
 import Settings from './pages/Settings';
 import assets from './assets';
 import styles from './styles/Global';
+import Account from './pages/settings/account';
+import SwitchMode from './pages/settings/switch';
+import Payment from './pages/settings/payment';
+import FAQ from './pages/settings/faq';
+import About from './pages/settings/about';
+
 
 const HomePage = () => (
   <>
@@ -42,18 +48,23 @@ const HomePage = () => (
 const AppLayout = () => (
   <div className="flex flex-col h-screen">
     <Topbar />
-    <div className="flex h-full"> 
-      <Navbar />
-      <div className="flex-1 overflow-y-auto p-4 bg-gray-100" style={{ marginLeft: '20%' }}>
-        <Routes>
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/habits" element={<Habits />} />
-          <Route path="/settings" element={<Settings />} />
-          <Route path="/analytics" element={<Analytics />} />
-          <Route path="/community" element={<Community />} />
-          <Route path="/plans" element={<Plans />} />
-        </Routes>
-      </div>
+    <Navbar />
+    <div className="flex-1 overflow-y-auto bg-gray-100 p-4" style={{ marginLeft: '20%'}}>
+      <Routes>
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/habits" element={<Habits />} />
+        <Route path="/settings" element={<Settings />}>
+          <Route index element={<Account />} />
+          <Route path="account" element={<Account />} />
+          <Route path="switch" element={<SwitchMode />} />
+          <Route path="payment" element={<Payment />} />
+          <Route path="faq" element={<FAQ />} />
+          <Route path="about" element={<About />} />
+        </Route>
+        <Route path="/analytics" element={<Analytics />} />
+        <Route path="/community" element={<Community />} />
+        <Route path="/plans" element={<Plans />} />
+      </Routes>
     </div>
   </div>
 );
