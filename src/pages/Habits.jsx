@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 const habits = [
   { name: 'Yoga', img: '/images/yoga.jpg' },
@@ -19,26 +19,50 @@ const habits = [
 ];
 
 export default function Habits() {
+  const [showDropdown, setShowDropdown] = useState(false);
+
   return (
     <div className="p-6">
-      {/* Buttons Row */}
-      <div className="flex justify-between items-center mb-6 flex-wrap gap-4">
-        <div className="flex gap-4">
-          <button className="bg-gray-200 px-6 py-2 rounded shadow text-black font-semibold">
-            Select ▼
-          </button>
+      {/* Top Buttons Section */}
+      <div className="flex justify-between items-start mb-6 flex-wrap gap-4">
+        {/* Left Side: Select + Join Habit */}
+        <div className="flex gap-4 items-start relative">
+          {/* Select Button with Arrow Toggle */}
+          <div className="relative">
+            <button
+              onClick={() => setShowDropdown(!showDropdown)}
+              className="bg-gray-200 px-6 py-2 rounded shadow text-black font-semibold flex items-center"
+            >
+              Select {showDropdown ? '▲' : '▼'}
+            </button>
+
+            {showDropdown && (
+              <ul className="absolute top-full mt-1 left-0 w-48 bg-white border border-gray-200 rounded shadow-lg z-10 max-h-60 overflow-y-auto">
+                {habits.map((habit, idx) => (
+                  <li
+                    key={idx}
+                    className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                  >
+                    {habit.name}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
+          {/* Join Habit */}
           <button className="bg-blue-500 text-white px-6 py-2 rounded shadow font-semibold hover:bg-blue-600">
             Join Habit
           </button>
         </div>
 
+        {/* Right Side: Add New Habit */}
         <button className="bg-indigo-500 text-white px-6 py-2 rounded shadow font-semibold hover:bg-indigo-600">
           + Add New Habit
         </button>
       </div>
 
-
-      {/* Grid of Habits */}
+      {/* Grid of Habit Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         {habits.map((habit, idx) => (
           <div key={idx} className="text-center">
