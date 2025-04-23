@@ -1,0 +1,558 @@
+/* Plans page styles */
+.plans-container {
+  padding: 1.5rem;
+  background-color: white;
+  position: relative;
+}
+
+/* Header styles */
+.plans-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.plans-title {
+  font-size: 1.875rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.plans-subtitle {
+  color: #6b7280;
+  margin: 0.25rem 0 0 0;
+}
+
+.header-buttons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.add-button, .edit-plan-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  padding: 0.5rem;
+  cursor: pointer;
+  border: none;
+}
+
+.add-button {
+  background-color: black;
+  color: white;
+}
+
+.add-button.disabled {
+  background-color: #d1d5db;
+  cursor: not-allowed;
+}
+
+.edit-plan-button {
+  background-color: #f3f4f6;
+  color: #6b7280;
+}
+
+.edit-plan-button.active {
+  background-color: #ddd6fe;
+  color: #7e22ce;
+}
+
+/* Categories */
+.categories-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.category-item {
+  display: flex;
+  align-items: center;
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  background-color: transparent;
+  transition: background-color 0.2s ease;
+  position: relative;
+}
+
+.category-item:hover {
+  background-color: #f9fafb;
+}
+
+.category-item.active-category {
+  background-color: #f3e8ff;
+}
+
+.category-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 9999px;
+  background-color: #e5e7eb;
+  margin-right: 0.5rem;
+}
+
+/* Category edit controls */
+.category-edit-controls {
+  display: flex;
+  gap: 0.25rem;
+  margin-left: 0.5rem;
+}
+
+.edit-template-btn, .delete-template-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 9999px;
+  border: none;
+  background-color: #f3f4f6;
+  color: #6b7280;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.edit-template-btn:hover {
+  background-color: #e5e7eb;
+  color: #4b5563;
+}
+
+.delete-template-btn:hover {
+  background-color: #fee2e2;
+  color: #ef4444;
+}
+
+/* Weekdays header */
+.weekdays-header {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  margin-bottom: 1rem;
+}
+
+.weekday {
+  text-align: center;
+  padding: 0.5rem 0;
+  cursor: pointer;
+}
+
+.selected-day {
+  font-weight: 700;
+  border-bottom: 2px solid #8b5cf6;
+}
+
+/* Time slots */
+.timeslot {
+  margin-bottom: 1.5rem;
+}
+
+.timeslot-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.timeslot-name {
+  font-size: 0.875rem;
+  color: #6b7280;
+  width: 5rem;
+}
+
+.timeslot-icon {
+  font-size: 1.25rem;
+}
+
+.timeslot-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.5rem;
+}
+
+.day-cell {
+  border: 1px solid #e5e7eb;
+  min-height: 4rem;
+  padding: 0.25rem;
+  border-radius: 0.25rem;
+  position: relative;
+}
+
+/* Plan items */
+.plan-item {
+  margin-bottom: 0.25rem;
+  padding: 0.25rem;
+  border-radius: 0.25rem;
+  background-color: #e5e7eb;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.plan-item:hover {
+  background-color: #d1d5db;
+}
+
+.plan-item.completed {
+  background-color: #ddd6fe;
+}
+
+.plan-item.completed:hover {
+  background-color: #c4b5fd;
+}
+
+.plan-name {
+  font-size: 0.75rem;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Duration badge styles */
+.duration-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.6rem;
+  color: #6b7280;
+  margin-top: 0.15rem;
+}
+
+.check-icon {
+  position: absolute;
+  right: 0.25rem;
+  top: 0.25rem;
+  color: #7e22ce;
+}
+
+/* Plan edit controls */
+.plan-edit-controls {
+  display: flex;
+  gap: 0.15rem;
+  position: absolute;
+  right: 0.25rem;
+  top: 0.25rem;
+}
+
+.edit-plan-btn, .delete-plan-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: 50%;
+  border: none;
+  background-color: transparent;
+  color: #6b7280;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  padding: 0;
+}
+
+.edit-plan-btn:hover {
+  background-color: #e5e7eb;
+  color: #4b5563;
+}
+
+.delete-plan-btn:hover {
+  background-color: #fee2e2;
+  color: #ef4444;
+}
+
+/* Overflow indicator */
+.overflow-indicator {
+  background-color: #e5e7eb;
+  color: #6b7280;
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-align: center;
+  padding: 0.25rem;
+  border-radius: 0.25rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.overflow-indicator:hover {
+  background-color: #d1d5db;
+}
+
+/* Popup styles */
+.popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.popup-content {
+  background-color: white;
+  border-radius: 0.5rem;
+  width: 90%;
+  max-width: 500px;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.popup-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.popup-header h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.popup-close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #6b7280;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.popup-body {
+  padding: 1rem;
+}
+
+.popup-plan-item {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem;
+  border-radius: 0.25rem;
+  margin-bottom: 0.5rem;
+  background-color: #f3f4f6;
+  position: relative;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.popup-plan-item:hover {
+  background-color: #e5e7eb;
+}
+
+.popup-plan-item.completed {
+  background-color: #ddd6fe;
+}
+
+.popup-plan-item.completed:hover {
+  background-color: #c4b5fd;
+}
+
+.popup-plan-name {
+  flex-grow: 1;
+  font-weight: 500;
+}
+
+.popup-plan-type {
+  padding: 0.25rem 0.5rem;
+  background-color: #e5e7eb;
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+  margin-right: 0.5rem;
+}
+
+/* New popup plan duration style */
+.popup-plan-duration {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  background-color: #f0f9ff;
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+  color: #0369a1;
+  margin-right: 0.5rem;
+}
+
+.duration-icon {
+  color: #0284c7;
+}
+
+.popup-check-icon {
+  color: #7e22ce;
+}
+
+/* Popup plan edit controls */
+.popup-plan-edit-controls {
+  display: flex;
+  gap: 0.5rem;
+  margin-left: 0.5rem;
+}
+
+.edit-popup-plan-btn, .delete-popup-plan-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 50%;
+  border: none;
+  background-color: #f3f4f6;
+  color: #6b7280;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.edit-popup-plan-btn:hover {
+  background-color: #e5e7eb;
+  color: #4b5563;
+}
+
+.delete-popup-plan-btn:hover {
+  background-color: #fee2e2;
+  color: #ef4444;
+}
+
+/* Form styles for add/edit popups */
+.form-group {
+  margin-bottom: 1rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  color: #4b5563;
+}
+
+.form-input {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.25rem;
+  font-size: 0.875rem;
+}
+
+.add-plan-button, .edit-plan-button-save, .edit-activity-button-save {
+  width: 100%;
+  background-color: #8b5cf6;
+  color: white;
+  padding: 0.75rem 1rem;
+  border: none;
+  border-radius: 0.25rem;
+  font-weight: 500;
+  cursor: pointer;
+  margin-top: 1rem;
+  transition: background-color 0.2s ease;
+}
+
+.add-plan-button:hover, .edit-plan-button-save:hover, .edit-activity-button-save:hover {
+  background-color: #7c3aed;
+}
+
+/* Activity Selection Grid */
+.activity-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.activity-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1rem 0.5rem;
+  border-radius: 0.5rem;
+  background-color: #f9fafb;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid #e5e7eb;
+  text-align: center;
+}
+
+.activity-card:hover {
+  background-color: #f3f4f6;
+  transform: translateY(-2px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.activity-icon {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  background-color: #f3f4f6;
+}
+
+.custom-activity-icon {
+  background-color: #e0e7ff;
+  color: #4f46e5;
+}
+
+.activity-name {
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+  font-size: 0.875rem;
+}
+
+.activity-type {
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+.custom-activity-card {
+  border: 1px dashed #c7d2fe;
+  background-color: #f5f7ff;
+}
+
+.custom-activity-card:hover {
+  background-color: #e0e7ff;
+}
+
+/* Selected activity info in edit popup */
+.selected-activity-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  background-color: #f9fafb;
+  border-radius: 0.5rem;
+  border: 1px solid #e5e7eb;
+}
+
+.selected-activity-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.selected-activity-icon {
+  font-size: 1.5rem;
+  margin-right: 0.75rem;
+}
+
+.selected-activity-name {
+  font-weight: 600;
+  font-size: 1.125rem;
+}
+
+.selected-activity-type {
+  font-size: 0.875rem;
+  color: #6b7280;
+}
