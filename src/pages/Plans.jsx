@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, Check, X, Edit, Trash2, Clock, ArrowRight } from 'lucide-react';
+import { Plus, Check, X, Edit, Trash2, Clock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import '../styles/Plans.css';
 
@@ -420,6 +420,7 @@ export default function Plans() {
   };
 
   // Function to open add activity popup from specific day/timeslot
+  // eslint-disable-next-line no-unused-vars
   const openAddActivityPopup = (dayIndex, timeSlot) => {
     setActivityToEdit({
       activity: null,
