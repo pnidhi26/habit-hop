@@ -34,6 +34,7 @@ async function login(credentials) {
       body: JSON.stringify(credentials),
       credentials: 'include',
     });
+    const data = await response.json();
 
     if (!response.ok) {
       const errorData = await response.json();
@@ -41,7 +42,11 @@ async function login(credentials) {
       throw errorData;
     }
 
-    return await response.json();
+    if (data.user) {
+      localStorage.setItem('dummyUser', JSON.stringify(data.user));
+    }
+
+    return data;
   } catch (error) {
     console.error('Login API error (catch):', error);
     throw error;

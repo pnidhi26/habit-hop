@@ -12,8 +12,9 @@ export default function Topbar() {
     const stored = localStorage.getItem('dummyUser');
     if (stored) {
       const user = JSON.parse(stored);
-      if (user.profilePicture) {
-        setProfileImage(user.profilePicture);
+      
+      if (user.profileImage && user.profileImage !== null) {
+        setProfileImage(user.profileImage);
       }
     }
   }, []);
