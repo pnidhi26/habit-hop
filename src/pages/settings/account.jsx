@@ -3,16 +3,19 @@ import defaultUser from '../../data/dummyUser';
 import sampleProfilePic from '../../assets/sampleProfilePic.jpeg';
 import ImageIcon from '@mui/icons-material/Image';
 import CloseIcon from '@mui/icons-material/Close';
+import { updateUserProfile } from '../../api/userApi';
 
 export default function Account() {
   const [user, setUser] = useState(defaultUser);
   const [form, setForm] = useState(defaultUser);
+  const [selectedImageFile, setSelectedImageFile] = useState(null)
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     const stored = localStorage.getItem('dummyUser');
     if (stored) {
       const parsed = JSON.parse(stored);
+      parsed.profilePicture = parsed.profileImage;
       setUser(parsed);
       setForm(parsed);
     }
@@ -20,20 +23,38 @@ export default function Account() {
 
   const handleReset = () => {
     setForm({ ...user });
+    setSelectedImageFile(null);
     window.location.reload();
   };
 
-  const handleUpdate = () => {
-    setUser({ ...form });
-    localStorage.setItem('dummyUser', JSON.stringify(form));
+  const handleUpdate = async () => {
+    try {
+      const payload = {
+        username: form.username,
+        email: form.email,
+        profileImage: selectedImageFile,
+      };
+
+    const updated = await updateUserProfile(payload);
     alert('User info updated!');
+    setUser(updated.user);
+    setForm({
+      ...updated.user,
+      profilePicture: updated.user.profileImage
+    });
+    localStorage.setItem('dummyUser', JSON.stringify(updated.user));
     window.location.reload();
+    }
+    catch (err) {
+      alert(err.message);
+    }
   };
 
   const handleImageUpload = (event) => {
     const file = event.target.files[0];
     if (!file) return;
 
+    setSelectedImageFile(file);
     const reader = new FileReader();
     reader.onloadend = () => {
       setForm({ ...form, profilePicture: reader.result });
@@ -74,7 +95,7 @@ export default function Account() {
         <input
           type="email"
           value={form.email}
-          onChange={(e) => setForm({ ...form, email: e.target.value })}
+          readOnly
           className="text-right border-none outline-none bg-transparent"
         />
       </div>
