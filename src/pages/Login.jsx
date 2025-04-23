@@ -15,7 +15,7 @@ const Login = () => {
     try {
       const responseData = await login({ email, password });
       console.log('Login successful:', responseData);
-      localStorage.setItem('authToken', responseData.token); // Store the token
+      localStorage.setItem('authToken', responseData.token);
       window.location.href = '/dashboard';
     } catch (error) {
       console.error('Login failed:', error);
