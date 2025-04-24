@@ -10,6 +10,7 @@ export default function Dashboard() {
   };
   
   const [userInfo, setUserInfo] = useState(null);
+  // eslint-disable-next-line no-unused-vars
   const [error, setError] = useState(null);
 
   useEffect(() => {
