@@ -114,11 +114,11 @@ export default function Plans() {
   ]);
 
   // State to track the active plan template (default to first one)
-  const [activePlanTemplate, setActivePlanTemplate] = useState(planTemplates[0].name);
+  const [activePlanTemplate, setActivePlanTemplate] = useState(planTemplates.length > 0 ? planTemplates[0].name : '');
 
   // State to track the current plans based on selected template
-  const [currentPlans, setCurrentPlans] = useState(planTemplates[0].plans);
-
+  const [currentPlans, setCurrentPlans] = useState(planTemplates.length > 0 ? planTemplates[0].plans : []);
+  
   const handleOverflowClick = (dayIndex, timeSlot) => {
     // Allow viewing plans in both modes, but with different behaviors
     const dayPlans = currentPlans[dayIndex][timeSlot];
@@ -242,12 +242,23 @@ export default function Plans() {
   const handleDeleteTemplate = (name) => {
     const filtered = planTemplates.filter(t => t.name !== name);
     setPlanTemplates(filtered);
-    if (activePlanTemplate === name && filtered.length > 0) {
-      setActivePlanTemplate(filtered[0].name);
-      setCurrentPlans(filtered[0].plans);
-    } else if (filtered.length === 0) {
-      setActivePlanTemplate('');
-      setCurrentPlans([]);
+    
+    if (activePlanTemplate === name) {
+      if (filtered.length > 0) {
+        // If we still have templates left, select the first one
+        setActivePlanTemplate(filtered[0].name);
+        setCurrentPlans(filtered[0].plans);
+      } else {
+        // If we deleted the last template, clear the current plan
+        setActivePlanTemplate('');
+        // Create empty week structure for empty plans
+        const emptyWeekPlans = daysOfWeek.map(() => ({
+          Morning: [],
+          Afternoon: [],
+          Evening: []
+        }));
+        setCurrentPlans(emptyWeekPlans);
+      }
     }
   };
 
