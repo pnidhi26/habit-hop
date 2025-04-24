@@ -47,7 +47,7 @@ export default function SwitchMode() {
   const handleSave = () => {
     localStorage.setItem('iconSettings', JSON.stringify(iconSettings));
     alert('Icon settings saved!');
-    window.location.reload();
+    window.location.href = '/settings/account'; 
   };
 
   return (
