@@ -53,7 +53,10 @@ describe('Account Page', () => {
   });
 
   
-  
+  test('renders Account component without crashing', () => {
+    render(<Account />);
+    expect(screen.getByText('Basic Info')).toBeInTheDocument();
+  });
   
   
 
