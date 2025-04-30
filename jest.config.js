@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 // jest.config.js
 module.exports = {
   // Automatically clear mock calls and instances between every test
@@ -44,10 +45,21 @@ module.exports = {
       statements: 70,
     },
   },
+=======
+module.exports = {
+  testEnvironment: 'jsdom',
+  setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
+>>>>>>> ec70481579d6ef5609df54ba2a0d7801d1cd02bf
 
   moduleNameMapper: {
     '\\.(css|scss|sass|less)$': 'identity-obj-proxy',
     '\\.(png|jpe?g|gif|svg|webp|ico|bmp|eot|otf|ttf|woff2?)$':
       '<rootDir>/__mocks__/fileMock.js',
   },
+<<<<<<< HEAD
 };
+=======
+};
+
+
+>>>>>>> ec70481579d6ef5609df54ba2a0d7801d1cd02bf
