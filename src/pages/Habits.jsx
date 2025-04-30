@@ -3,21 +3,21 @@ import { useNavigate } from 'react-router-dom';
 import './css/Habits.css';
 
 const habits = [
-  { name: 'Yoga', img: '/images/yoga.jpg', description: 'Improve flexibility and calm your mind through controlled poses and breathing.' },
-  { name: 'Gym', img: '/images/gym.jpg', description: 'Build strength and stamina with weight training and cardio workouts.' },
-  { name: 'Meditation', img: '/images/meditation.jpg', description: 'Reduce stress and improve focus through mindful breathing.' },
-  { name: 'Walking', img: '/images/walking.jpg', description: 'Boost heart health and clear your mind with daily walks.' },
-  { name: 'Reading', img: '/images/reading.jpg', description: 'Expand your knowledge and unwind with a good book.' },
-  { name: 'Stretching', img: '/images/stretching.jpg', description: 'Loosen tight muscles and prevent injuries through daily stretching.' },
-  { name: 'Earthing', img: '/images/earthing.jpg', description: 'Reconnect with nature by walking barefoot on natural ground.' },
-  { name: 'Cycling', img: '/images/cycling.jpg', description: 'Strengthen your legs and enjoy the outdoors with cycling.' },
-  { name: 'Dancing', img: '/images/dancing.jpg', description: 'Lift your mood and stay active with fun dance routines.' },
-  { name: 'Drinking water', img: '/images/water.jpg', description: 'Stay hydrated to improve energy and focus.' },
-  { name: 'Journaling', img: '/images/journaling.jpg', description: 'Organize your thoughts and reflect through writing.' },
-  { name: 'Skincare', img: '/images/skincare.jpg', description: 'Nourish your skin with a consistent self-care routine.' },
-  { name: 'Digital Detox', img: '/images/detox.jpg', description: 'Take a break from screens to refresh your mind and body.' },
-  { name: 'Cleaning/Chores', img: '/images/chores.jpg', description: 'Create a tidy, stress-free space with regular cleaning.' },
-  { name: 'Cooking', img: '/images/cooking.jpg', description: 'Fuel your body and creativity through homemade meals.' },
+  { name: 'Yoga', img: '/src/assets/habit/yoga.jpg', description: 'Improve flexibility and calm your mind through controlled poses and breathing.' },
+  { name: 'Gym', img: '/src/assets/habit/gym.jpg', description: 'Build strength and stamina with weight training and cardio workouts.' },
+  { name: 'Meditation', img: '/src/assets/habit/meditation.jpg', description: 'Reduce stress and improve focus through mindful breathing.' },
+  { name: 'Walking', img: '/src/assets/habit/walking.jpg', description: 'Boost heart health and clear your mind with daily walks.' },
+  { name: 'Reading', img: '/src/assets/habit/reading.jpg', description: 'Expand your knowledge and unwind with a good book.' },
+  { name: 'Stretching', img: '/src/assets/habit/stretching.jpg', description: 'Loosen tight muscles and prevent injuries through daily stretching.' },
+  { name: 'Earthing', img: '/src/assets/habit/earthing.jpg', description: 'Reconnect with nature by walking barefoot on natural ground.' },
+  { name: 'Cycling', img: '/src/assets/habit/cycling.jpg', description: 'Strengthen your legs and enjoy the outdoors with cycling.' },
+  { name: 'Dancing', img: '/src/assets/habit/dancing.jpg', description: 'Lift your mood and stay active with fun dance routines.' },
+  { name: 'Drinking water', img: '/src/assets/habit/water.jpg', description: 'Stay hydrated to improve energy and focus.' },
+  { name: 'Journaling', img: '/src/assets/habit/journaling.jpg', description: 'Organize your thoughts and reflect through writing.' },
+  { name: 'Skincare', img: '/src/assets/habit/skincare.jpg', description: 'Nourish your skin with a consistent self-care routine.' },
+  { name: 'Digital Detox', img: '/src/assets/habit/detox.jpg', description: 'Take a break from screens to refresh your mind and body.' },
+  { name: 'Cleaning/Chores', img: '/src/assets/habit/chores.jpg', description: 'Create a tidy, stress-free space with regular cleaning.' },
+  { name: 'Cooking', img: '/src/assets/habit/cooking.jpg', description: 'Fuel your body and creativity through homemade meals.' },
 ];
 
 export default function Habits() {
