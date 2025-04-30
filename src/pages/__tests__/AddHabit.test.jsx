@@ -1,30 +1,30 @@
+// src/pages/__tests__/AddHabit.test.jsx
+import '@testing-library/jest-dom';
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import AddHabit from '../AddHabit';
 import { createHabit } from '../../api/habits';
-import '@testing-library/jest-dom';
 
-
-// ---- mocks -------------------------------------------------
+// ─── mocks ────────────────────────────────────────────────────────────────────
 jest.mock('../../api/habits');
 const mockNavigate = jest.fn();
 jest.mock('react-router-dom', () => ({
   ...jest.requireActual('react-router-dom'),
   useNavigate: () => mockNavigate,
 }));
-// ------------------------------------------------------------
 
+// ─── tests ────────────────────────────────────────────────────────────────────
 describe('AddHabit Component', () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
-  test('renders all form fields', () => {
+  it('renders all form fields', () => {
     render(
       <MemoryRouter>
         <AddHabit />
-      </MemoryRouter>
+      </MemoryRouter>,
     );
 
     expect(screen.getByLabelText(/habit name/i)).toBeInTheDocument();
@@ -35,16 +35,16 @@ describe('AddHabit Component', () => {
     expect(screen.getByLabelText(/preferred time block/i)).toBeInTheDocument();
   });
 
-  test('submits form with valid data and navigates back', async () => {
+  it('submits valid form data and navigates back', async () => {
     createHabit.mockResolvedValue({ success: true });
 
     render(
       <MemoryRouter>
         <AddHabit />
-      </MemoryRouter>
+      </MemoryRouter>,
     );
 
-    // fill in required fields
+    // fill required fields
     fireEvent.change(screen.getByLabelText(/habit name/i), {
       target: { value: 'Test Habit' },
     });
@@ -58,6 +58,12 @@ describe('AddHabit Component', () => {
       target: { value: '30' },
     });
 
+    // **new** — attach a fake file so encodeImage code runs
+    const file = new File(['dummy-data'], 'pic.png', { type: 'image/png' });
+    fireEvent.change(screen.getByLabelText(/upload image/i), {
+      target: { files: [file] },
+    });
+
     fireEvent.click(screen.getByRole('button', { name: /create habit/i }));
 
     await waitFor(() => {
@@ -67,19 +73,19 @@ describe('AddHabit Component', () => {
         minTime: 10,
         maxTime: 30,
         preferredTimeBlock: 'morning',
-        image: null,
+        image: expect.any(String), // base-64 string from FileReader
       });
       expect(mockNavigate).toHaveBeenCalledWith('/habits');
     });
   });
 
-  test('shows error banner when API call fails', async () => {
+  it('shows error banner when API call fails', async () => {
     createHabit.mockRejectedValue(new Error('Failed to create habit'));
 
     render(
       <MemoryRouter>
         <AddHabit />
-      </MemoryRouter>
+      </MemoryRouter>,
     );
 
     fireEvent.change(screen.getByLabelText(/habit name/i), {
@@ -88,28 +94,26 @@ describe('AddHabit Component', () => {
     fireEvent.click(screen.getByRole('button', { name: /create habit/i }));
 
     await waitFor(() => {
-      expect(
-        screen.getByText(/failed to create habit/i)
-      ).toBeInTheDocument();
+      expect(screen.getByText(/failed to create habit/i)).toBeInTheDocument();
     });
   });
 
-  test('navigates back to /habits on cancel', () => {
+  it('navigates back to /habits on cancel', () => {
     render(
       <MemoryRouter>
         <AddHabit />
-      </MemoryRouter>
+      </MemoryRouter>,
     );
 
     fireEvent.click(screen.getByRole('button', { name: /cancel/i }));
     expect(mockNavigate).toHaveBeenCalledWith('/habits');
   });
 
-  test('updates max-time min attribute when min-time changes', () => {
+  it('updates max-time min attribute when min-time changes', () => {
     render(
       <MemoryRouter>
         <AddHabit />
-      </MemoryRouter>
+      </MemoryRouter>,
     );
 
     const minInput = screen.getByLabelText(/minimum time/i);
@@ -119,6 +123,6 @@ describe('AddHabit Component', () => {
     expect(maxInput).toHaveAttribute('min', '30');
 
     fireEvent.change(maxInput, { target: { value: '20' } });
-    expect(maxInput.value).toBe('20'); // basic check; no styling class assertion
+    expect(maxInput.value).toBe('20');
   });
 });

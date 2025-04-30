@@ -2,7 +2,6 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import Habits from '../Habits';
-import '@testing-library/jest-dom';
 
 
 describe('Habits Page', () => {
