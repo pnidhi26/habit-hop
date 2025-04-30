@@ -1,80 +1,85 @@
-// src/pages/AddHabit.jsx   (or AddHabit.js if that’s how your project names files)
-
+// src/pages/AddHabit.jsx
 import React, { useState } from 'react';
-import { useNavigate }   from 'react-router-dom';
-import { createHabit }   from '../api/habits';
+import { useNavigate } from 'react-router-dom';
+import { createHabit } from '../api/habits';
 import './css/Habits.css';
 
-/* ---------- initial form state ---------- */
 const defaultState = {
-  habitName   : '',
-  description : '',
-  imageFile   : null,
-  minTime     : '',
-  maxTime     : '',
-  timeBlock   : 'morning',
+  habitName: '',
+  description: '',
+  imageFile: null,
+  minTime: '',
+  maxTime: '',
+  timeBlock: 'morning',
 };
 
 export default function AddHabit() {
-  const [form,    setForm]    = useState(defaultState);
+  const [form, setForm] = useState(defaultState);
   const [loading, setLoading] = useState(false);
-  const [error,   setError]   = useState(null);
-  const  navigate             = useNavigate();
+  const [error, setError] = useState(null);
+  const navigate = useNavigate();
 
-  /* ---------- handlers ---------- */
-  function handleChange(e) {
+  const handleChange = (e) => {
     const { name, value, files } = e.target;
     setForm(f => ({
       ...f,
       [name]: name === 'imageFile' ? (files[0] || null) : value,
     }));
-  }
+  };
 
-  /* convert selected image file → base-64 string */
-  function encodeImage(file) {
-    if (!file) return Promise.resolve(null);
+  const encodeImage = async (file) => {
+    if (!file) return null;
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
-      reader.onload  = () => resolve(reader.result);
+      reader.onload = () => resolve(reader.result);
       reader.onerror = reject;
       reader.readAsDataURL(file);
     });
-  }
+  };
 
-  async function handleSubmit(e) {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true); setError(null);
+    setLoading(true);
+    setError(null);
 
     try {
       const img = await encodeImage(form.imageFile);
-      await createHabit({
-        habitName          : form.habitName,
-        description        : form.description,
-        minTime            : Number(form.minTime),
-        maxTime            : Number(form.maxTime),
-        preferredTimeBlock : form.timeBlock,
-        image              : img,
-      });
-      setForm(defaultState);          // clear the form
-      navigate('/habits');            // go back to Habit list
+      
+      const payload = {
+        habitName: form.habitName,
+        description: form.description,
+        minTime: Number(form.minTime),
+        maxTime: Number(form.maxTime),
+        preferredTimeBlock: form.timeBlock,
+        image: img,
+      };
+
+      const response = await createHabit(payload);
+      
+      if (response.success) {
+        setForm(defaultState);
+        navigate('/habits');
+      } else {
+        throw new Error('Failed to create habit');
+      }
     } catch (err) {
       setError(err.message || 'Something went wrong');
     } finally {
       setLoading(false);
     }
-  }
+  };
 
-  function handleCancel() {
-    navigate('/habits');
-  }
-
-  /* ---------- UI ---------- */
   return (
     <div className="p-6 max-w-2xl mx-auto">
       <h2 className="text-2xl font-bold mb-4">Create a New Habit</h2>
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Habit Name -------------------------------------------------- */}
+        {error && (
+          <div className="text-red-600 bg-red-50 p-3 rounded">
+            {error}
+          </div>
+        )}
+
         <label className="block">
           <span className="font-semibold">Habit Name</span>
           <input
@@ -87,7 +92,6 @@ export default function AddHabit() {
           />
         </label>
 
-        {/* Description -------------------------------------------------- */}
         <label className="block">
           <span className="font-semibold">Description</span>
           <textarea
@@ -100,7 +104,6 @@ export default function AddHabit() {
           />
         </label>
 
-        {/* Image -------------------------------------------------------- */}
         <label className="block">
           <span className="font-semibold">Upload Image</span>
           <input
@@ -112,7 +115,6 @@ export default function AddHabit() {
           />
         </label>
 
-        {/* Min / Max time --------------------------------------------- */}
         <div className="grid grid-cols-2 gap-4">
           <label>
             <span className="font-semibold">Minimum Time (min)</span>
@@ -141,7 +143,6 @@ export default function AddHabit() {
           </label>
         </div>
 
-        {/* Preferred time block ---------------------------------------- */}
         <label className="block">
           <span className="font-semibold">Preferred Time Block</span>
           <select
@@ -156,23 +157,19 @@ export default function AddHabit() {
           </select>
         </label>
 
-        {/* Error message ---------------------------------------------- */}
-        {error && <p className="text-red-600">{error}</p>}
-
-        {/* Buttons ----------------------------------------------------- */}
         <div className="flex gap-4">
           <button
             type="submit"
             disabled={loading}
             className={`flex-1 bg-indigo-500 text-white py-2 rounded font-semibold hover:bg-indigo-600
-                        ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
-            {loading ? 'Saving…' : 'Create Habit'}
+            {loading ? 'Creating...' : 'Create Habit'}
           </button>
 
           <button
             type="button"
-            onClick={handleCancel}
+            onClick={() => navigate('/habits')}
             className="flex-1 bg-gray-300 text-gray-800 py-2 rounded font-semibold hover:bg-gray-400"
           >
             Cancel
