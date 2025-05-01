@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import sampleProfilePic from '../assets/sampleProfilePic.jpeg';
 import IconButton from '@mui/material/IconButton';
 import LogoutIcon from '@mui/icons-material/Logout';
+import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 
 export default function Topbar() {
   const navigate = useNavigate();
@@ -23,6 +24,10 @@ export default function Topbar() {
     navigate('/login');
   };
 
+  const handleLeaderboard = () => {
+    navigate('/leaderboard');
+  };
+
   return (
     <div className="bg-gray-900 text-white flex justify-between items-center p-4 shadow w-full">
       <div className="text-2xl font-bold">HabitHop</div>
@@ -32,6 +37,9 @@ export default function Topbar() {
           alt="User" 
           className="w-10 h-10 rounded-full object-cover"
         />
+        <IconButton onClick={handleLeaderboard} sx={{ color: 'white' }}>
+          <EmojiEventsIcon />
+        </IconButton>
         <IconButton onClick={handleLogout} sx={{ color: 'white' }}>
           <LogoutIcon />
         </IconButton>
