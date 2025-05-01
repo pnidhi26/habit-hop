@@ -32,14 +32,14 @@ export default function Topbar() {
     <div className="bg-gray-900 text-white flex justify-between items-center p-4 shadow w-full">
       <div className="text-2xl font-bold">HabitHop</div>
       <div className="flex items-center gap-2">
-        <IconButton onClick={handleLeaderboard} sx={{ color: 'white' }}>
-          <EmojiEventsIcon />
-        </IconButton>
         <img 
           src={profileImage} 
           alt="User" 
           className="w-10 h-10 rounded-full object-cover"
         />
+        <IconButton onClick={handleLeaderboard} sx={{ color: 'white' }}>
+          <EmojiEventsIcon />
+        </IconButton>
         <IconButton onClick={handleLogout} sx={{ color: 'white' }}>
           <LogoutIcon />
         </IconButton>
