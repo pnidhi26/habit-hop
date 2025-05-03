@@ -11,12 +11,13 @@ import Habits from './pages/Habits';
 import Settings from './pages/Settings';
 import assets from './assets';
 import styles from './styles/Global';
+import AddHabit from './pages/AddHabit';
 import Account from './pages/settings/account';
 import SwitchMode from './pages/settings/switch';
 import Payment from './pages/settings/payment';
 import FAQ from './pages/settings/faq';
 import About from './pages/settings/about';
-
+import  Leaderboard  from './pages/Leaderboard';
 
 const HomePage = () => (
   <>
@@ -64,7 +65,10 @@ const AppLayout = () => (
         <Route path="/analytics" element={<Analytics />} />
         <Route path="/community" element={<Community />} />
         <Route path="/plans" element={<Plans />} />
+        <Route path="/add-habit" element={<AddHabit />} />
+        <Route path="/leaderboard" element={<Leaderboard />} />      
       </Routes>
+      
     </div>
   </div>
 );
