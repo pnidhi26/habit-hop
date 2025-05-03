@@ -1,7 +1,17 @@
-import React, { useState } from 'react';
-import { Plus, Check, X, Edit, Trash2, Clock } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Plus, Check, X, Edit, Trash2, Clock, ChevronLeft, ChevronRight, Calendar } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import '../styles/Plans.css';
+import {
+  convertApiDataToAppFormat,
+  formatDateForAPI,
+  formatDateDisplay,
+  getWeekStartDate,
+  generateWeekDates,
+  createWeekLabel,
+  isToday,
+  updateActivityStatus
+} from '../utils/dataConverter';
 
 export default function Plans() {
   const navigate = useNavigate();
@@ -10,6 +20,12 @@ export default function Plans() {
   const [showAddPlanPopup, setShowAddPlanPopup] = useState(false);
   const [newPlanName, setNewPlanName] = useState('');
   const [editMode, setEditMode] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  // New states for week navigation
+  const [currentWeekOffset, setCurrentWeekOffset] = useState(0); // 0 = current week, -1 = last week, 1 = next week
+  const [currentWeekDates, setCurrentWeekDates] = useState([]);
+  const [weekLabel, setWeekLabel] = useState('');
 
   // New states for editing activities and plan names
   const [showEditActivityPopup, setShowEditActivityPopup] = useState(false);
@@ -43,81 +59,136 @@ export default function Plans() {
   const daysOfWeek = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
   const timeSlots = ['Morning', 'Afternoon', 'Evening'];
 
+  // Mock API data in the specified JSON format
+  const [apiData, setApiData] = useState({
+    planName: "Sports",
+    activities: [
+      {
+        activityId: 1001,
+        habit: {
+          habitId: "3f81ff9e-59d3-4018-8e3e-0ff2dd68897f",
+          habitName: "Running",
+          habitDescription: "Morning jog in the park",
+          habitImage: "running.png"
+        },
+        dates: ["2025-05-01", "2025-05-03"],
+        times: [30, 45],
+        timeOfDay: ["Morning", "Afternoon"],
+        status: [true, false]
+      },
+      {
+        activityId: 1002,
+        habit: {
+          habitId: "a230f702-ee1c-4754-bd25-49582f08e1e9",
+          habitName: "Yoga",
+          habitDescription: "Evening yoga session",
+          habitImage: "yoga.png"
+        },
+        dates: ["2025-05-02"],
+        times: [60],
+        timeOfDay: ["Evening"],
+        status: [false]
+      },
+      {
+        activityId: 1003,
+        habit: {
+          habitId: "b342ef54-9d12-3789-ab25-76590f23e8a1",
+          habitName: "Gym Workout",
+          habitDescription: "Strength training",
+          habitImage: "gym.png"
+        },
+        dates: ["2025-04-28", "2025-04-30"],  // Previous week dates
+        times: [90, 45],
+        timeOfDay: ["Morning", "Afternoon"],
+        status: [true, true]
+      },
+      {
+        activityId: 1004,
+        habit: {
+          habitId: "c453fe65-8e23-4678-bc36-87671e34f9b2",
+          habitName: "Swimming",
+          habitDescription: "Lap swimming at the pool",
+          habitImage: "swimming.png"
+        },
+        dates: ["2025-05-08", "2025-05-10"],  // Next week dates
+        times: [60, 60],
+        timeOfDay: ["Morning", "Morning"],
+        status: [false, false]
+      }
+    ]
+  });
+
   // Define plan templates with durations added to activities
   const [planTemplates, setPlanTemplates] = useState([
     {
       name: 'Sports',
       icon: '🏃',
-      plans: [
-        // Monday
-        {
-          Morning: [{ name: 'Running', completed: true, type: 'Sports', minDuration: 20, maxDuration: 45 }],
-          Afternoon: [{ name: 'Gym', completed: false, type: 'Fitness', minDuration: 30, maxDuration: 90 }],
-          Evening: []
-        },
-        // Tuesday
-        {
-          Morning: [{ name: 'Yoga', completed: true, type: 'Sports', minDuration: 15, maxDuration: 60 }],
-          Afternoon: [],
-          Evening: []
-        },
-        // Wednesday
-        {
-          Morning: [{ name: 'Yoga', completed: true, type: 'Sports', minDuration: 15, maxDuration: 60 }],
-          Afternoon: [],
-          Evening: []
-        },
-        // Thursday - Sunday kept empty for simplicity
-        { Morning: [], Afternoon: [], Evening: [] },
-        { Morning: [], Afternoon: [], Evening: [] },
-        { Morning: [], Afternoon: [], Evening: [] },
-        { Morning: [], Afternoon: [], Evening: [] }
-      ]
+      plans: [] // This will be populated from API data
     },
     {
       name: 'Learning',
       icon: '📚',
-      plans: [
-        // Monday
-        {
-          Morning: [],
-          Afternoon: [],
-          Evening: [{ name: 'Learn Spanish', completed: false, type: 'Learning', minDuration: 25, maxDuration: 60 }]
-        },
-        // Tuesday
-        {
-          Morning: [],
-          Afternoon: [{ name: 'C++', completed: false, type: 'Learning', minDuration: 45, maxDuration: 120 }],
-          Evening: []
-        },
-        // Wednesday
-        {
-          Morning: [],
-          Afternoon: [
-            { name: 'Python', completed: false, type: 'Learning', minDuration: 30, maxDuration: 90 },
-            { name: 'Database', completed: true, type: 'Learning', minDuration: 20, maxDuration: 45 }
-          ],
-          Evening: []
-        },
-        // Thursday
-        {
-          Morning: [{ name: 'Java', completed: false, type: 'Learning', minDuration: 40, maxDuration: 90 }],
-          Afternoon: [],
-          Evening: []
-        },
-        // Friday - Sunday kept empty for simplicity
-        { Morning: [], Afternoon: [], Evening: [] },
-        { Morning: [], Afternoon: [], Evening: [] },
-        { Morning: [], Afternoon: [], Evening: [] }
-      ]
+      plans: [] // This will be populated from API data
     },
   ]);
 
   // State to track the active plan template (default to first one)
-  const [activePlanTemplate, setActivePlanTemplate] = useState(planTemplates[0].name);
+  const [activePlanTemplate, setActivePlanTemplate] = useState('Sports');
 
   // State to track the current plans based on selected template
-  const [currentPlans, setCurrentPlans] = useState(planTemplates[0].plans);
+  const [currentPlans, setCurrentPlans] = useState([]);
+  
+  // Mock function to fetch data from the backend for a specific week
+  const fetchWeekData = (weekOffset) => {
+    setLoading(true);
+    
+    // In a real application, this would be an API call
+    // For now, we'll just use our mock data and simulate a delay
+    setTimeout(() => {
+      setLoading(false);
+    }, 500);
+  };
+
+  // Function to navigate to previous week
+  const goToPreviousWeek = () => {
+    setCurrentWeekOffset(currentWeekOffset - 1);
+    fetchWeekData(currentWeekOffset - 1);
+  };
+
+  // Function to navigate to next week
+  const goToNextWeek = () => {
+    setCurrentWeekOffset(currentWeekOffset + 1);
+    fetchWeekData(currentWeekOffset + 1);
+  };
+
+  // Function to reset to current week
+  const goToCurrentWeek = () => {
+    setCurrentWeekOffset(0);
+    fetchWeekData(0);
+  };
+
+  // Effect to initialize week dates and update when week offset changes
+  useEffect(() => {
+    // Calculate the start date for the week
+    const startDate = getWeekStartDate(currentWeekOffset);
+    
+    // Generate the dates for each day of the week
+    const weekDates = generateWeekDates(startDate);
+    setCurrentWeekDates(weekDates);
+    
+    // Create the week label
+    const label = createWeekLabel(startDate);
+    setWeekLabel(label);
+    
+  }, [currentWeekOffset]);
+
+  // Effect to update current plans when week dates or API data changes
+  useEffect(() => {
+    if (currentWeekDates.length > 0) {
+      const convertedPlans = convertApiDataToAppFormat(apiData, currentWeekDates, timeSlots);
+      setCurrentPlans(convertedPlans);
+    }
+  }, [currentWeekDates, apiData]);
 
   const handleOverflowClick = (dayIndex, timeSlot) => {
     // Allow viewing plans in both modes, but with different behaviors
@@ -125,6 +196,7 @@ export default function Plans() {
 
     setPopupContent({
       day: daysOfWeek[dayIndex],
+      date: formatDateDisplay(currentWeekDates[dayIndex]),
       timeSlot: timeSlot,
       plans: dayPlans,
       dayIndex: dayIndex // Store the day index for updating plans from popup
@@ -146,12 +218,6 @@ export default function Plans() {
 
     // Set the active plan template
     setActivePlanTemplate(templateName);
-
-    // Update the current plans based on the selected template
-    const selectedTemplate = planTemplates.find(template => template.name === templateName);
-    if (selectedTemplate) {
-      setCurrentPlans(selectedTemplate.plans);
-    }
   };
 
   // Function to toggle completion status of an activity
@@ -167,14 +233,22 @@ export default function Plans() {
       !updatedPlans[dayIndex][timeSlot][planIndex].completed;
 
     setCurrentPlans(updatedPlans);
-
-    // Also update the original template
-    const templateIndex = planTemplates.findIndex(template => template.name === activePlanTemplate);
-    if (templateIndex !== -1) {
-      const updatedTemplates = [...planTemplates];
-      updatedTemplates[templateIndex].plans = updatedPlans;
-      setPlanTemplates(updatedTemplates);
-    }
+    
+    // Update the API data to reflect the changes
+    const activity = updatedPlans[dayIndex][timeSlot][planIndex];
+    const date = currentWeekDates[dayIndex];
+    const dateStr = formatDateForAPI(date);
+    
+    // In a real implementation, you would send the updated status to the backend
+    // For now, we'll just update our mock API data
+    const updatedApiData = updateActivityStatus(
+      apiData, 
+      activity.activityId, 
+      dateStr, 
+      updatedPlans[dayIndex][timeSlot][planIndex].completed
+    );
+    
+    setApiData(updatedApiData);
   };
 
   // Function to toggle completion status from popup
@@ -201,39 +275,39 @@ export default function Plans() {
       ...popupContent,
       plans: updatedPopupPlans
     });
-
-    // Also update the original template
-    const templateIndex = planTemplates.findIndex(template => template.name === activePlanTemplate);
-    if (templateIndex !== -1) {
-      const updatedTemplates = [...planTemplates];
-      updatedTemplates[templateIndex].plans = updatedPlans;
-      setPlanTemplates(updatedTemplates);
-    }
+    
+    // Update the API data to reflect the changes
+    const activity = updatedPlans[dayIndex][timeSlot][planIndex];
+    const date = currentWeekDates[dayIndex];
+    const dateStr = formatDateForAPI(date);
+    
+    // In a real implementation, you would send the updated status to the backend
+    // For now, we'll just update our mock API data
+    const updatedApiData = updateActivityStatus(
+      apiData, 
+      activity.activityId, 
+      dateStr, 
+      updatedPlans[dayIndex][timeSlot][planIndex].completed
+    );
+    
+    setApiData(updatedApiData);
   };
 
   // Function to handle adding a new plan category
   const handleAddPlan = () => {
     if (!newPlanName.trim()) return;
 
-    // Create empty week structure for the new plan
-    const emptyWeekPlans = daysOfWeek.map(() => ({
-      Morning: [],
-      Afternoon: [],
-      Evening: []
-    }));
-
     // Create new plan template
     const newPlanTemplate = {
       name: newPlanName,
       icon: '📝', // Default icon
-      plans: emptyWeekPlans
+      plans: []
     };
 
     // Add new plan template to the list
     const updatedTemplates = [...planTemplates, newPlanTemplate];
     setPlanTemplates(updatedTemplates);
     setActivePlanTemplate(newPlanName);
-    setCurrentPlans(emptyWeekPlans);
 
     setNewPlanName('');
     setShowAddPlanPopup(false);
@@ -242,12 +316,15 @@ export default function Plans() {
   const handleDeleteTemplate = (name) => {
     const filtered = planTemplates.filter(t => t.name !== name);
     setPlanTemplates(filtered);
-    if (activePlanTemplate === name && filtered.length > 0) {
-      setActivePlanTemplate(filtered[0].name);
-      setCurrentPlans(filtered[0].plans);
-    } else if (filtered.length === 0) {
-      setActivePlanTemplate('');
-      setCurrentPlans([]);
+    
+    if (activePlanTemplate === name) {
+      if (filtered.length > 0) {
+        // If we still have templates left, select the first one
+        setActivePlanTemplate(filtered[0].name);
+      } else {
+        // If we deleted the last template, clear the current plan
+        setActivePlanTemplate('');
+      }
     }
   };
 
@@ -340,21 +417,35 @@ export default function Plans() {
         completed: false,
         type: selectedActivity.type,
         minDuration: editedMinDuration,
-        maxDuration: editedMaxDuration
+        maxDuration: editedMaxDuration,
+        activityId: Date.now(), // Generate a temporary ID
+        habitId: `temp-${Date.now()}`, // Generate a temporary habit ID
+        dateStr: formatDateForAPI(currentWeekDates[dayIndex])
       };
       
       updatedPlans[dayIndex][timeSlot].push(newActivity);
+      
+      // In a real app, you would send the new activity to the backend
+      // and update the apiData state with the response
+      // For now, we'll just add it to our mock data
+      const updatedApiData = {...apiData};
+      updatedApiData.activities.push({
+        activityId: newActivity.activityId,
+        habit: {
+          habitId: newActivity.habitId,
+          habitName: newActivity.name,
+          habitDescription: "",
+          habitImage: ""
+        },
+        dates: [newActivity.dateStr],
+        times: [newActivity.minDuration],
+        timeOfDay: [timeSlot],
+        status: [false]
+      });
+      setApiData(updatedApiData);
     }
 
     setCurrentPlans(updatedPlans);
-
-    // Update the original template
-    const templateIndex = planTemplates.findIndex(template => template.name === activePlanTemplate);
-    if (templateIndex !== -1) {
-      const updatedTemplates = [...planTemplates];
-      updatedTemplates[templateIndex].plans = updatedPlans;
-      setPlanTemplates(updatedTemplates);
-    }
 
     if (showPopup) {
       if (activityIndex >= 0) {
@@ -374,7 +465,10 @@ export default function Plans() {
           completed: false,
           type: selectedActivity.type,
           minDuration: editedMinDuration,
-          maxDuration: editedMaxDuration
+          maxDuration: editedMaxDuration,
+          activityId: Date.now(), // Generate a temporary ID
+          habitId: `temp-${Date.now()}`, // Generate a temporary habit ID
+          dateStr: formatDateForAPI(currentWeekDates[popupContent.dayIndex])
         };
         
         setPopupContent({
@@ -393,19 +487,40 @@ export default function Plans() {
   const deleteActivity = (dayIndex, timeSlot, activityIndex, fromPopup = false) => {
     // Create a deep copy of current plans
     const updatedPlans = JSON.parse(JSON.stringify(currentPlans));
-
-    // Remove the activity
+    
+    // Get the activity to delete
+    const activityToDelete = updatedPlans[dayIndex][timeSlot][activityIndex];
+    
+    // Remove the activity from the current plans
     updatedPlans[dayIndex][timeSlot].splice(activityIndex, 1);
-
     setCurrentPlans(updatedPlans);
 
-    // Update the original template
-    const templateIndex = planTemplates.findIndex(template => template.name === activePlanTemplate);
-    if (templateIndex !== -1) {
-      const updatedTemplates = [...planTemplates];
-      updatedTemplates[templateIndex].plans = updatedPlans;
-      setPlanTemplates(updatedTemplates);
+    // In a real app, you would send a delete request to the backend
+    // For now, we'll just update our mock data
+    const updatedApiData = {...apiData};
+    const activityIndex2 = updatedApiData.activities.findIndex(
+      a => a.activityId === activityToDelete.activityId
+    );
+    
+    if (activityIndex2 !== -1) {
+      const dateStr = formatDateForAPI(currentWeekDates[dayIndex]);
+      const dateIndex = updatedApiData.activities[activityIndex2].dates.indexOf(dateStr);
+      
+      if (dateIndex !== -1) {
+        // If the activity has multiple dates, just remove this date
+        if (updatedApiData.activities[activityIndex2].dates.length > 1) {
+          updatedApiData.activities[activityIndex2].dates.splice(dateIndex, 1);
+          updatedApiData.activities[activityIndex2].times.splice(dateIndex, 1);
+          updatedApiData.activities[activityIndex2].timeOfDay.splice(dateIndex, 1);
+          updatedApiData.activities[activityIndex2].status.splice(dateIndex, 1);
+        } else {
+          // If this is the only date, remove the entire activity
+          updatedApiData.activities.splice(activityIndex2, 1);
+        }
+      }
     }
+    
+    setApiData(updatedApiData);
 
     // If deleting from popup view, update the popup content too
     if (fromPopup) {
@@ -420,7 +535,6 @@ export default function Plans() {
   };
 
   // Function to open add activity popup from specific day/timeslot
-  // eslint-disable-next-line no-unused-vars
   const openAddActivityPopup = (dayIndex, timeSlot) => {
     setActivityToEdit({
       activity: null,
@@ -486,6 +600,12 @@ export default function Plans() {
 
   return (
     <div className="plans-container">
+      {loading && (
+        <div className="week-loading">
+          <div className="loading-spinner"></div>
+        </div>
+      )}
+      
       <div className="plans-header">
         <div>
           <h1 className="plans-title">Plans</h1>
@@ -548,9 +668,43 @@ export default function Plans() {
           </div>
         )}
       </div>
+      
+      {/* Week Navigation Controls */}
+      <div className="week-navigation">
+        <button 
+          className="nav-button prev-week-button"
+          onClick={goToPreviousWeek}
+        >
+          <ChevronLeft size={20} />
+        </button>
+        
+        <div className="current-week" onClick={goToCurrentWeek}>
+          <Calendar size={16} />
+          <span>{weekLabel}</span>
+          {currentWeekOffset === 0 && (
+            <span className="current-week-indicator">Current Week</span>
+          )}
+        </div>
+        
+        <button 
+          className="nav-button next-week-button"
+          onClick={goToNextWeek}
+        >
+          <ChevronRight size={20} />
+        </button>
+      </div>
 
       <div className="weekdays-header">
-        {daysOfWeek.map((day, index) => <div key={index} className="weekday">{day}</div>)}
+        {currentWeekDates.map((date, index) => (
+          <div 
+            key={index} 
+            className={`weekday ${isToday(date) ? 'is-today' : ''}`}
+          >
+            <div>{daysOfWeek[index]}</div>
+            <div className="date-display">{formatDateDisplay(date)}</div>
+            {isToday(date) && <div className="today-indicator"></div>}
+          </div>
+        ))}
       </div>
 
       <div className="timeslots-container">
@@ -564,12 +718,12 @@ export default function Plans() {
             </div>
             <div className="timeslot-grid">
               {daysOfWeek.map((_, dayIndex) => {
-                const dayPlans = currentPlans[dayIndex][slot] || [];
+                const dayPlans = currentPlans[dayIndex]?.[slot] || [];
                 const hasOverflow = dayPlans.length > 2;
                 const displayPlans = hasOverflow ? dayPlans.slice(0, 2) : dayPlans;
 
                 return (
-                  <div key={dayIndex} className="day-cell">
+                  <div key={dayIndex} className={`day-cell ${dayPlans.length === 0 ? 'empty-day' : ''}`}>
                     {displayPlans.map((plan, planIndex) => (
                       <div
                         key={planIndex}
@@ -580,7 +734,9 @@ export default function Plans() {
                         {/* Duration badge */}
                         <div className="duration-badge">
                           <Clock size={10} />
-                          {formatDuration(plan.minDuration)}-{formatDuration(plan.maxDuration)}
+                          {plan.minDuration === plan.maxDuration ? 
+                            formatDuration(plan.minDuration) : 
+                            `${formatDuration(plan.minDuration)}-${formatDuration(plan.maxDuration)}`}
                         </div>
                         {plan.completed && !editMode && <div className="check-icon"><Check size={12} /></div>}
                         {editMode && (
@@ -615,6 +771,17 @@ export default function Plans() {
                         +{dayPlans.length - 2}
                       </div>
                     )}
+                    {dayPlans.length === 0 && (
+                      <div className="empty-day-indicator">No activities</div>
+                    )}
+                    {!editMode && (
+                      <div 
+                        className="add-plan-cell-button" 
+                        onClick={() => openAddActivityPopup(dayIndex, slot)}
+                      >
+                        <Plus size={14} />
+                      </div>
+                    )}
                   </div>
                 );
               })}
@@ -627,48 +794,62 @@ export default function Plans() {
         <div className="popup-overlay">
           <div className="popup-content">
             <div className="popup-header">
-              <h3>{popupContent.day} - {popupContent.timeSlot}</h3>
+              <h3>{popupContent.day} ({popupContent.date}) - {popupContent.timeSlot}</h3>
               <button className="popup-close" onClick={closePopup}><X size={18} /></button>
             </div>
             <div className="popup-body">
-              {popupContent.plans.map((plan, index) => (
-                <div
-                  key={index}
-                  className={`popup-plan-item ${plan.completed ? 'completed' : ''}`}
-                  onClick={() => !editMode && togglePopupCompletionStatus(index)}
+              {popupContent.plans.length === 0 ? (
+                <div className="empty-popup-message">No activities for this time slot</div>
+              ) : (
+                popupContent.plans.map((plan, index) => (
+                  <div
+                    key={index}
+                    className={`popup-plan-item ${plan.completed ? 'completed' : ''}`}
+                    onClick={() => !editMode && togglePopupCompletionStatus(index)}
+                  >
+                    <span className="popup-plan-name">{plan.name}</span>
+                    <span className="popup-plan-type">{plan.type || 'Activity'}</span>
+                    {/* Duration information */}
+                    <span className="popup-plan-duration">
+                      <Clock size={14} className="duration-icon" />
+                      {plan.minDuration === plan.maxDuration ? 
+                        formatDuration(plan.minDuration) : 
+                        `${formatDuration(plan.minDuration)}-${formatDuration(plan.maxDuration)}`}
+                    </span>
+                    {plan.completed && !editMode && <div className="popup-check-icon"><Check size={14} /></div>}
+                    {editMode && (
+                      <div className="popup-plan-edit-controls">
+                        <button
+                          className="edit-popup-plan-btn"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openEditActivityPopup(plan, popupContent.dayIndex, popupContent.timeSlot, index);
+                          }}
+                        >
+                          <Edit size={14} />
+                        </button>
+                        <button
+                          className="delete-popup-plan-btn"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            deleteActivity(popupContent.dayIndex, popupContent.timeSlot, index, true);
+                          }}
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ))
+              )}
+              {!editMode && (
+                <button 
+                  className="add-popup-plan-button"
+                  onClick={() => openAddActivityPopup(popupContent.dayIndex, popupContent.timeSlot)}
                 >
-                  <span className="popup-plan-name">{plan.name}</span>
-                  <span className="popup-plan-type">{plan.type}</span>
-                  {/* Duration information */}
-                  <span className="popup-plan-duration">
-                    <Clock size={14} className="duration-icon" />
-                    {formatDuration(plan.minDuration)}-{formatDuration(plan.maxDuration)}
-                  </span>
-                  {plan.completed && !editMode && <div className="popup-check-icon"><Check size={14} /></div>}
-                  {editMode && (
-                    <div className="popup-plan-edit-controls">
-                      <button
-                        className="edit-popup-plan-btn"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          openEditActivityPopup(plan, popupContent.dayIndex, popupContent.timeSlot, index);
-                        }}
-                      >
-                        <Edit size={14} />
-                      </button>
-                      <button
-                        className="delete-popup-plan-btn"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          deleteActivity(popupContent.dayIndex, popupContent.timeSlot, index, true);
-                        }}
-                      >
-                        <Trash2 size={14} />
-                      </button>
-                    </div>
-                  )}
-                </div>
-              ))}
+                  <Plus size={16} /> Add Activity
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -828,8 +1009,10 @@ export default function Plans() {
                       dayIndex: parseInt(e.target.value)
                     })}
                   >
-                    {daysOfWeek.map((day, index) => (
-                      <option key={index} value={index}>{day}</option>
+                    {currentWeekDates.map((date, index) => (
+                      <option key={index} value={index}>
+                        {daysOfWeek[index]} ({formatDateDisplay(date)})
+                      </option>
                     ))}
                   </select>
                 </div>
