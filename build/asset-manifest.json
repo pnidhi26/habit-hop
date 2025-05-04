@@ -1,7 +1,7 @@
 {
   "files": {
-    "main.css": "./static/css/main.614783fd.css",
-    "main.js": "./static/js/main.c807373a.js",
+    "main.css": "./static/css/main.588a9946.css",
+    "main.js": "./static/js/main.f0c27dd4.js",
     "static/media/CSUCHICO_Icon.png": "./static/media/CSUCHICO_Icon.5f2f019a8205570e84c3.png",
     "static/media/h2.png": "./static/media/h2.9223c8af694645ba5701.png",
     "static/media/h1.png": "./static/media/h1.588656f416917385d469.png",
@@ -12,11 +12,11 @@
     "static/media/banner.svg": "./static/media/banner.3c310352a6d940cab963.svg",
     "static/media/banner04.svg": "./static/media/banner04.b43b10b807bb6396ac49.svg",
     "index.html": "./index.html",
-    "main.614783fd.css.map": "./static/css/main.614783fd.css.map",
-    "main.c807373a.js.map": "./static/js/main.c807373a.js.map"
+    "main.588a9946.css.map": "./static/css/main.588a9946.css.map",
+    "main.f0c27dd4.js.map": "./static/js/main.f0c27dd4.js.map"
   },
   "entrypoints": [
-    "static/css/main.614783fd.css",
-    "static/js/main.c807373a.js"
+    "static/css/main.588a9946.css",
+    "static/js/main.f0c27dd4.js"
   ]
 }

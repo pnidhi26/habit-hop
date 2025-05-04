@@ -56,7 +56,7 @@ export default function FAQ() {
               href={faq.link}
               target="_blank"
               rel="noopener noreferrer"
-              className="block bg-white p-3 rounded shadow hover:bg-gray-50 transition flex items-center gap-2"
+              className="bg-white p-3 rounded shadow hover:bg-gray-50 transition flex items-center gap-2"
             >
               <SearchIcon fontSize="small" className="text-gray-500" />
               <span>{faq.question}</span>

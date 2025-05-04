@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getUserInfo } from '../api/user';
@@ -52,7 +53,7 @@ export default function Dashboard() {
 
       <div className="flex justify-center pt-4">
         <button
-          className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-2xl shadow"
+          className="bg-purple-600 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-2xl shadow"
           onClick={handleQuickAddClick}
         >
           Quick Add Habit
