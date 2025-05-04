@@ -2,7 +2,7 @@ const API_BASE_URL = 'https://habitstacker-821782230505.us-west1.run.app/api/aut
 
 async function getHabit(habitId) {
     try {
-      const response = await fetch(`${API_BASE_URL}/habit/${habitId}`, {
+      const response = await fetch(`${API_BASE_URL}/getHabit/${habitId}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',

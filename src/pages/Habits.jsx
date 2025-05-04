@@ -16,7 +16,6 @@ export default function Habits() {
 
         const decoded = jwtDecode(token);
         const userId = decoded.userId;
-        console.log("Decoded userId:", userId);
         const response = await fetch(`https://habitstacker-821782230505.us-west1.run.app/api/getHabits/${userId}`, {
           method: 'GET',
           headers: {

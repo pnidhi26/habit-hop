@@ -1,16 +1,13 @@
-// src/pages/AddHabit.jsx
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createHabit } from '../api/habits';
+import { jwtDecode } from 'jwt-decode';
 import './css/Habits.css';
 
 const defaultState = {
   habitName: '',
   description: '',
-  imageFile: null,
-  minTime: '',
-  maxTime: '',
-  timeBlock: 'morning',
+  imageFile: null
 };
 
 export default function AddHabit() {
@@ -18,9 +15,16 @@ export default function AddHabit() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
+  
+  const token = localStorage.getItem('authToken');
+  const decoded = jwtDecode(token);
+  const userId = decoded.userId;
 
   const handleChange = (e) => {
     const { name, value, files } = e.target;
+    if (name === 'imageFile') {
+      console.log('Selected image:', files[0]);  
+    }
     setForm(f => ({
       ...f,
       [name]: name === 'imageFile' ? (files[0] || null) : value,
@@ -28,12 +32,18 @@ export default function AddHabit() {
   };
 
   const encodeImage = async (file) => {
-    if (!file) return null;
+    if (!file) return null; 
+
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
-      reader.onload = () => resolve(reader.result);
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
+      reader.onloadend = () => {
+        resolve(reader.result); 
+      };
+      reader.onerror = (error) => {
+        console.error('Error encoding file:', error);  
+        reject('Failed to encode image');
+      };
+      reader.readAsDataURL(file);  
     });
   };
 
@@ -43,21 +53,21 @@ export default function AddHabit() {
     setError(null);
 
     try {
-      const img = await encodeImage(form.imageFile);
-      
+      const img = form.imageFile ? await encodeImage(form.imageFile) : "adfasdf";
+
       const payload = {
         habitName: form.habitName,
-        description: form.description,
-        minTime: Number(form.minTime),
-        maxTime: Number(form.maxTime),
-        preferredTimeBlock: form.timeBlock,
-        image: img,
+        habitDescription: form.description,
+        habitImage: img, 
       };
 
-      const response = await createHabit(payload);
-      
+      console.log("Payload to be sent:", payload);  
+
+      // Send the payload to the API
+      const response = await createHabit(payload, userId);
+
       if (response.success) {
-        setForm(defaultState);
+        setForm(defaultState); 
         navigate('/habits');
       } else {
         throw new Error('Failed to create habit');
@@ -113,48 +123,6 @@ export default function AddHabit() {
             className="mt-1 w-full"
             onChange={handleChange}
           />
-        </label>
-
-        <div className="grid grid-cols-2 gap-4">
-          <label>
-            <span className="font-semibold">Minimum Time (min)</span>
-            <input
-              name="minTime"
-              type="number"
-              min="1"
-              required
-              className="mt-1 w-full border p-2 rounded"
-              value={form.minTime}
-              onChange={handleChange}
-            />
-          </label>
-
-          <label>
-            <span className="font-semibold">Maximum Time (min)</span>
-            <input
-              name="maxTime"
-              type="number"
-              min={form.minTime || 1}
-              required
-              className="mt-1 w-full border p-2 rounded"
-              value={form.maxTime}
-              onChange={handleChange}
-            />
-          </label>
-        </div>
-
-        <label className="block">
-          <span className="font-semibold">Preferred Time Block</span>
-          <select
-            name="timeBlock"
-            className="mt-1 w-full border p-2 rounded"
-            value={form.timeBlock}
-            onChange={handleChange}
-          >
-            <option value="morning">Morning</option>
-            <option value="midday">Midday</option>
-            <option value="evening">Evening</option>
-          </select>
         </label>
 
         <div className="flex gap-4">
