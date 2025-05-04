@@ -1,29 +1,43 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { jwtDecode } from 'jwt-decode';
 import './css/Habits.css';
 
-const habits = [
-  { name: 'Yoga', img: '/src/assets/habit/yoga.jpg', description: 'Improve flexibility and calm your mind through controlled poses and breathing.' },
-  { name: 'Gym', img: '/src/assets/habit/gym.jpg', description: 'Build strength and stamina with weight training and cardio workouts.' },
-  { name: 'Meditation', img: '/src/assets/habit/meditation.jpg', description: 'Reduce stress and improve focus through mindful breathing.' },
-  { name: 'Walking', img: '/src/assets/habit/walking.jpg', description: 'Boost heart health and clear your mind with daily walks.' },
-  { name: 'Reading', img: '/src/assets/habit/reading.jpg', description: 'Expand your knowledge and unwind with a good book.' },
-  { name: 'Stretching', img: '/src/assets/habit/stretching.jpg', description: 'Loosen tight muscles and prevent injuries through daily stretching.' },
-  { name: 'Earthing', img: '/src/assets/habit/earthing.jpg', description: 'Reconnect with nature by walking barefoot on natural ground.' },
-  { name: 'Cycling', img: '/src/assets/habit/cycling.jpg', description: 'Strengthen your legs and enjoy the outdoors with cycling.' },
-  { name: 'Dancing', img: '/src/assets/habit/dancing.jpg', description: 'Lift your mood and stay active with fun dance routines.' },
-  { name: 'Drinking water', img: '/src/assets/habit/water.jpg', description: 'Stay hydrated to improve energy and focus.' },
-  { name: 'Journaling', img: '/src/assets/habit/journaling.jpg', description: 'Organize your thoughts and reflect through writing.' },
-  { name: 'Skincare', img: '/src/assets/habit/skincare.jpg', description: 'Nourish your skin with a consistent self-care routine.' },
-  { name: 'Digital Detox', img: '/src/assets/habit/detox.jpg', description: 'Take a break from screens to refresh your mind and body.' },
-  { name: 'Cleaning/Chores', img: '/src/assets/habit/chores.jpg', description: 'Create a tidy, stress-free space with regular cleaning.' },
-  { name: 'Cooking', img: '/src/assets/habit/cooking.jpg', description: 'Fuel your body and creativity through homemade meals.' },
-];
-
 export default function Habits() {
+  const [habits, setHabits] = useState([]);
   const [showDropdown, setShowDropdown] = useState(false);
   const [flippedCards, setFlippedCards] = useState({});
   const navigate = useNavigate();
+  useEffect(() => {
+    const fetchHabits = async () => {
+      try {
+        const token = localStorage.getItem('authToken');
+        if (!token) throw new Error('No token found');
+
+        const decoded = jwtDecode(token);
+        const userId = decoded.userId;
+        console.log("Decoded userId:", userId);
+        const response = await fetch(`https://habitstacker-821782230505.us-west1.run.app/api/getHabits/${userId}`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        const data = await response.json();
+
+        if (data.success) {
+          setHabits(data.habits);
+        } else {
+          console.error('Failed to fetch habits:', data.message);
+        }
+      } catch (error) {
+        console.error('Error fetching habits:', error);
+      }
+    };
+
+    fetchHabits();
+  }, []);
 
   const toggleFlip = (idx) => {
     setFlippedCards((prev) => ({
@@ -36,7 +50,6 @@ export default function Habits() {
     <div className="p-6">
       {/* Top Buttons Section */}
       <div className="flex justify-between items-start mb-6 flex-wrap gap-4">
-        {/* Left Side: Select + Join Habit */}
         <div className="flex gap-4 items-start relative">
           <div className="relative">
             <button
@@ -52,7 +65,7 @@ export default function Habits() {
                     key={idx}
                     className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
                   >
-                    {habit.name}
+                    {habit.habitName}
                   </li>
                 ))}
               </ul>
@@ -64,7 +77,6 @@ export default function Habits() {
           </button>
         </div>
 
-        {/* Right Side: Add New Habit Button */}
         <button
           onClick={() => navigate('/add-habit')}
           className="bg-indigo-500 text-white px-6 py-2 rounded shadow font-semibold hover:bg-indigo-600"
@@ -85,22 +97,22 @@ export default function Habits() {
                 {/* Front */}
                 <div className="flip-front rounded shadow-lg overflow-hidden bg-white">
                   <img
-                    src={habit.img}
-                    alt={habit.name}
+                    src={habit.habitImage}
+                    alt={habit.habitName}
                     className="w-full h-48 object-cover"
                   />
                 </div>
 
                 {/* Back */}
                 <div className="flip-back bg-white rounded shadow-lg p-4 flex flex-col justify-center items-center text-center">
-                  <h3 className="text-md font-bold text-gray-800">{habit.name}</h3>
-                  <p className="text-base text-gray-600 mt-2">{habit.description}</p>
+                  <h3 className="text-md font-bold text-gray-800">{habit.habitName}</h3>
+                  <p className="text-base text-gray-600 mt-2">{habit.habitDescription}</p>
                 </div>
               </div>
             </div>
 
             {/* Habit Name BELOW Card */}
-            <p className="mt-2 text-lg font-semibold text-center text-gray-800">{habit.name}</p>
+            <p className="mt-2 text-lg font-semibold text-center text-gray-800">{habit.habitName}</p>
           </div>
         ))}
       </div>
