@@ -2,10 +2,12 @@
 import React, { useState, useEffect } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Calendar, Clock, Activity } from 'lucide-react';
+import defaultUser from '../data/dummyUser';
 
 export default function Analytics() {
   const [selectedHabit, setSelectedHabit] = useState('All');
   const [hoveredDay, setHoveredDay] = useState(null);
+  const [user, setUser] = useState(defaultUser);
   
   // Sample data for demonstration
   const habits = ['All', 'Habit 1', 'Habit 2', 'Habit 3', 'Habit 4', 'Habit 5'];
@@ -70,17 +72,17 @@ export default function Analytics() {
 
   return (
     <div className="max-w-6xl mx-auto p-4">
-      <h1 className="text-3xl font-bold mb-6 text-purple-600">Analytics Dashboard</h1>
+      <h1 className="text-3xl font-bold mb-6 text-black-600">Analytics Dashboard</h1>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
         {/* Lifetime Statistics */}
         <div className="bg-white rounded-lg shadow-md p-6 border-2 border-black-500">
           <div className="flex items-start mb-4">
-            <div className="w-16 h-16 rounded-full bg-gray-200 overflow-hidden">
-              <div className="w-full h-full bg-gray-300"></div>
+            <div className="w-16 h-16 rounded-full bg-gray-400 overflow-hidden">
+              <div className="w-full h-full bg-gray-300">{user.profilePicture}</div>
             </div>
             <div className="ml-4">
-              <h1 className="text-xl text-purple-700">Prakash Nidhi Verma</h1>
+              <h1 className="text-xl text-purple-700">{user.username}</h1>
               <p className="text-sm text-gray-500">Student @ CSU Chico</p>
             </div>
           </div>
@@ -111,13 +113,13 @@ export default function Analytics() {
           <h2 className="text-2xl text-purple-500 mb-4">Personal Report Highlights</h2>
           
           <ul className="list-disc pl-6 space-y-2">
-            <li className="text-purple-400">
+            <li className="text-black-300">
               Last Friday was your lowest percentage of habits completed at 67%
             </li>
-            <li className="text-purple-400">
+            <li className="text-black-300">
               If you completed your Friday habits, you would have had a 96% completion rate!
             </li>
-            <li className="text-purple-400">
+            <li className="text-black-300">
               You tend to skip your morning habits!
             </li>
           </ul>
