@@ -26,42 +26,65 @@ export const convertApiDataToAppFormat = (apiData, weekDates, timeSlots) => {
       dateToIndexMap[formatDateForAPI(date)] = index;
     });
   
-    // Process the API data
-    if (apiData.activities && Array.isArray(apiData.activities)) {
-      apiData.activities.forEach(activity => {
-        if (!activity.dates || !Array.isArray(activity.dates)) {
-          return;
+    // Handle case where apiData is an array of plans or a single plan
+    let activitiesArray = [];
+    
+    if (Array.isArray(apiData)) {
+      // Collect all activities from all plans
+      apiData.forEach(plan => {
+        if (plan && plan.activities && Array.isArray(plan.activities)) {
+          // Tag each activity with its parent plan name for reference
+          const planActivities = plan.activities.map(activity => ({
+            ...activity,
+            planName: plan.planName || 'Unnamed Plan'
+          }));
+          activitiesArray = activitiesArray.concat(planActivities);
         }
-  
-        activity.dates.forEach((dateStr, idx) => {
-          // Check if this date is in the current week view
-          if (dateStr in dateToIndexMap) {
-            const dayIndex = dateToIndexMap[dateStr];
-            const timeSlot = activity.timeOfDay[idx];
-            const completed = activity.status[idx];
-            const duration = activity.times[idx];
-  
-            if (!timeSlot || !timeSlots.includes(timeSlot)) {
-              return; // Skip if timeSlot is invalid
-            }
-  
-            // Add the activity to the appropriate day and time slot
-            emptyWeekPlans[dayIndex][timeSlot].push({
-              name: activity.habit.habitName,
-              completed: completed,
-              type: getActivityType(activity),
-              minDuration: duration,
-              maxDuration: duration,
-              habitId: activity.habit.habitId,
-              activityId: activity.activityId,
-              dateStr: dateStr,
-              description: activity.habit.habitDescription || '',
-              image: activity.habit.habitImage || '',
-            });
-          }
-        });
       });
+    } else if (apiData && apiData.activities) {
+      // Handle single plan object
+      activitiesArray = apiData.activities.map(activity => ({
+        ...activity,
+        planName: apiData.planName || 'Unnamed Plan'
+      }));
     }
+  
+    // Process all the activities
+    activitiesArray.forEach(activity => {
+      if (!activity.dates || !Array.isArray(activity.dates)) {
+        return;
+      }
+  
+      activity.dates.forEach((dateStr, idx) => {
+        // Check if this date is in the current week view
+        if (dateStr in dateToIndexMap) {
+          const dayIndex = dateToIndexMap[dateStr];
+          const timeSlot = activity.timeOfDay[idx];
+          const completed = activity.status[idx];
+          const duration = activity.times[idx];
+  
+          if (!timeSlot || !timeSlots.includes(timeSlot)) {
+            return; // Skip if timeSlot is invalid
+          }
+  
+          // Add the activity to the appropriate day and time slot
+          emptyWeekPlans[dayIndex][timeSlot].push({
+            name: activity.habit.habitName,
+            completed: completed,
+            // Use the habit type directly instead of determining it
+            type: activity.habit.type || activity.planName || 'Activity',
+            minDuration: duration,
+            maxDuration: duration,
+            habitId: activity.habit.habitId,
+            activityId: activity.activityId,
+            dateStr: dateStr,
+            description: activity.habit.habitDescription || '',
+            image: activity.habit.habitImage || '',
+            planName: activity.planName || 'Unnamed Plan'
+          });
+        }
+      });
+    });
   
     return emptyWeekPlans;
   };
