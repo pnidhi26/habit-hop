@@ -50,6 +50,7 @@ export default function Habits() {
       {/* Top Buttons Section */}
       <div className="flex justify-between items-start mb-6 flex-wrap gap-4">
         <div className="flex gap-4 items-start relative">
+          {/*
           <div className="relative">
             <button
               onClick={() => setShowDropdown(!showDropdown)}
@@ -70,10 +71,10 @@ export default function Habits() {
               </ul>
             )}
           </div>
-
-          <button className="bg-blue-500 text-white px-6 py-2 rounded shadow font-semibold hover:bg-blue-600">
+          */}
+          {/* <button className="bg-blue-500 text-white px-6 py-2 rounded shadow font-semibold hover:bg-blue-600">
             Join Habit
-          </button>
+          </button>*/}
         </div>
 
         <button
@@ -85,11 +86,11 @@ export default function Habits() {
       </div>
 
       {/* Habit Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+      <div className="grid gap-8 grid-cols-[repeat(auto-fit,minmax(160px,1fr))]">
         {habits.map((habit, idx) => (
           <div key={idx} className="flex flex-col items-center">
             <div
-              className="flip-card w-full h-48 cursor-pointer"
+              className="flip-card w-48 h-48 cursor-pointer sm:w-56 sm:h-56 md:w-60 md:h-60"
               onClick={() => toggleFlip(idx)}
             >
               <div className={`flip-inner ${flippedCards[idx] ? 'flipped' : ''}`}>
@@ -98,7 +99,7 @@ export default function Habits() {
                   <img
                     src={habit.habitImage}
                     alt={habit.habitName}
-                    className="w-full h-48 object-cover"
+                    className="w-full h-full object-cover"
                   />
                 </div>
 
