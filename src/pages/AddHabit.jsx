@@ -51,26 +51,33 @@ export default function AddHabit() {
     e.preventDefault();
     setLoading(true);
     setError(null);
-
+  
     try {
-      const img = form.imageFile ? await encodeImage(form.imageFile) : "adfasdf";
-
-      const payload = {
-        habitName: form.habitName,
-        habitDescription: form.description,
-        habitImage: img, 
-      };
-
-      console.log("Payload to be sent:", payload);  
-
-      // Send the payload to the API
-      const response = await createHabit(payload, userId);
-
-      if (response.success) {
-        setForm(defaultState); 
+      const formData = new FormData();
+      formData.append('habitName', form.habitName);
+      formData.append('habitDescription', form.description);
+      if (form.imageFile) {
+        formData.append('habitImage', form.imageFile);
+      }
+  
+      const token = localStorage.getItem('authToken');
+      const response = await fetch(
+        `https://habitstacker-821782230505.us-west1.run.app/api/createHabit/${userId}`,
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          body: formData,
+        }
+      );
+  
+      const data = await response.json();
+      if (data.success) {
+        setForm(defaultState);
         navigate('/habits');
       } else {
-        throw new Error('Failed to create habit');
+        throw new Error(data.message || 'Failed to create habit');
       }
     } catch (err) {
       setError(err.message || 'Something went wrong');
@@ -78,6 +85,7 @@ export default function AddHabit() {
       setLoading(false);
     }
   };
+  
 
   return (
     <div className="p-6 max-w-2xl mx-auto">
