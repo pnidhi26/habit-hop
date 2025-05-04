@@ -70,7 +70,7 @@ const dummyPlans = [
     ]
   },
   {
-    planName: "Study",
+    planName: "Learning",
     activities: [
       {
         activityId: 2001,

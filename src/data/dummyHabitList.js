@@ -1,4 +1,5 @@
 const dummyHabitList = [
+    // Original Sports activities
     { 
       id: 'running', 
       name: 'Running', 
@@ -32,6 +33,31 @@ const dummyHabitList = [
       icon: '🧠' 
     },
     { 
+      id: 'stretching', 
+      name: 'Stretching', 
+      type: 'Sports', 
+      minDuration: 10, 
+      maxDuration: 20, 
+      icon: '🤸' 
+    },
+    { 
+      id: 'walking', 
+      name: 'Walking', 
+      type: 'Fitness', 
+      minDuration: 20, 
+      maxDuration: 60, 
+      icon: '🚶' 
+    },
+    { 
+      id: 'journaling', 
+      name: 'Journaling', 
+      type: 'Sports', 
+      minDuration: 15, 
+      maxDuration: 30, 
+      icon: '📔' 
+    },
+    
+    { 
       id: 'reading', 
       name: 'Reading', 
       type: 'Learning', 
@@ -55,30 +81,40 @@ const dummyHabitList = [
       maxDuration: 120, 
       icon: '💻' 
     },
+    
+    // New Learning activities from dummyPlan.js
     { 
-      id: 'stretching', 
-      name: 'Stretching', 
-      type: 'Sports', 
-      minDuration: 10, 
-      maxDuration: 20, 
-      icon: '🤸' 
-    },
-    { 
-      id: 'walking', 
-      name: 'Walking', 
-      type: 'Fitness', 
-      minDuration: 20, 
+      id: 'algorithms', 
+      name: 'Read Algorithms Book', 
+      type: 'Learning', 
+      minDuration: 45, 
       maxDuration: 60, 
-      icon: '🚶' 
+      icon: '📖' 
     },
     { 
-      id: 'journaling', 
-      name: 'Journaling', 
-      type: 'Sports', 
-      minDuration: 15, 
-      maxDuration: 30, 
-      icon: '📔' 
+      id: 'math-notes', 
+      name: 'Take Math Notes', 
+      type: 'Learning', 
+      minDuration: 30, 
+      maxDuration: 60, 
+      icon: '✏️' 
+    },
+    { 
+      id: 'lecture-video', 
+      name: 'Watch Lecture Video', 
+      type: 'Learning', 
+      minDuration: 40, 
+      maxDuration: 60, 
+      icon: '🎬' 
+    },
+    { 
+      id: 'essay-draft', 
+      name: 'Write Essay Draft', 
+      type: 'Learning', 
+      minDuration: 60, 
+      maxDuration: 90, 
+      icon: '📝' 
     }
-  ];
+];
   
-  export default dummyHabitList;
+export default dummyHabitList;
