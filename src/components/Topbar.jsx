@@ -29,8 +29,8 @@ export default function Topbar() {
   };
 
   return (
-    <div className="bg-gray-900 text-white flex justify-between items-center p-4 shadow w-full">
-      <div className="text-2xl font-bold">HabitHop</div>
+    <div className="bg-black text-white flex justify-between items-center p-4 shadow w-full">
+      <div className="text-2xl text-purple-500 font-bold">HabitHop</div>
       <div className="flex items-center gap-2">
         <img 
           src={profileImage} 
