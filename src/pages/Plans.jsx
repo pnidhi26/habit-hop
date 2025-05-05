@@ -16,6 +16,40 @@ import {
 } from '../utils/dataConverter';
 import dummyPlans from '../data/dummyPlan';
 import dummyHabitList from '../data/dummyHabitList';
+import { jwtDecode } from 'jwt-decode';
+import { getPlans, createPlan, updatePlan, deletePlan } from '../services/planService';
+import { addActivity, updateActivity, deleteActivity, toggleActivityStatus } from '../services/activityService';
+
+const API_BASE_URL = 'http://localhost:8080';
+
+// Debug function to help identify date issues
+const debugDates = (weekDates, apiData) => {
+  console.log("=== DEBUG DATE INFORMATION ===");
+  console.log("Current Date:", new Date().toISOString());
+
+  // Log formatted week dates
+  console.log("Week Dates:");
+  weekDates.forEach((date, index) => {
+    console.log(`Day ${index + 1}:`, {
+      date: date.toISOString(),
+      formatted: formatDateForAPI(date)
+    });
+  });
+
+  // Log activity dates from API
+  if (apiData && apiData.activities) {
+    console.log("API Activity Dates:");
+    apiData.activities.forEach((activity, index) => {
+      console.log(`Activity ${index + 1}:`, {
+        name: activity.habit?.habitName || 'Unknown',
+        dates: activity.dates,
+        timeOfDay: activity.timeOfDay
+      });
+    });
+  }
+
+  console.log("=== END DEBUG INFO ===");
+};
 
 export default function Plans() {
   const navigate = useNavigate();
@@ -48,45 +82,157 @@ export default function Plans() {
   // Predefined activities with suggested durations and images
   const [predefinedActivities, setPredefinedActivities] = useState(dummyHabitList);
 
-
   // Sample data 
   const daysOfWeek = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
   const timeSlots = ['Morning', 'Afternoon', 'Evening'];
 
-  // Mock API data in the specified JSON format
-  const [apiData, setApiData] = useState(dummyPlans);
+  // API data state
+  const [apiData, setApiData] = useState({ activities: [] });
+  const [userHabits, setUserHabits] = useState([]);
 
-
-  // Define plan templates with durations added to activities
-  const [planTemplates, setPlanTemplates] = useState([
-    {
-      name: 'Sports',
-      icon: '🏃',
-      plans: [] // This will be populated from API data
-    },
-    {
-      name: 'Learning',
-      icon: '📚',
-      plans: [] // This will be populated from API data
-    },
-  ]);
-
-  // State to track the active plan template (default to first one)
-  const [activePlanTemplate, setActivePlanTemplate] = useState('Sports');
-
-  // State to track the current plans based on selected template
+  // Plan templates state (from real API data)
+  const [planTemplates, setPlanTemplates] = useState([]);
+  const [activePlanTemplate, setActivePlanTemplate] = useState('');
   const [currentPlans, setCurrentPlans] = useState([]);
 
-  // Mock function to fetch data from the backend for a specific week
+  const [repeatActivity, setRepeatActivity] = useState(false);
+
+  const closeEditActivityPopup = () => {
+    setShowEditActivityPopup(false);
+    setRepeatActivity(false); // Reset the repeat checkbox
+  };
+
+  const closeActivitySelectionPopup = () => {
+    setShowActivitySelectionPopup(false);
+    setRepeatActivity(false); // Reset the repeat checkbox
+  };
+
+  // Function to fetch plans data from the API
+  const fetchPlansData = async () => {
+    setLoading(true);
+    try {
+      const token = localStorage.getItem('authToken');
+      if (!token) {
+        console.error('No auth token found');
+        navigate('/login');
+        return;
+      }
+
+      const decoded = jwtDecode(token);
+      const userId = decoded.userId;
+
+      // Fetch plans using the service
+      const data = await getPlans(userId);
+
+      console.log("API Response Data:", data);
+
+      if (data.success) {
+        // Format the data to match our application structure
+        const formattedData = {
+          activities: []
+        };
+
+        // Extract plans and their activities
+        if (data.plans && data.plans.length > 0) {
+          // Create plan templates from the plans
+          const templates = data.plans.map(plan => ({
+            name: plan.planName,
+            planId: plan.planId,
+            plans: []
+          }));
+          setPlanTemplates(templates);
+
+          // Set active plan template to the first plan if not already set
+          if (!activePlanTemplate && templates.length > 0) {
+            setActivePlanTemplate(templates[0].name);
+          }
+
+          // Process activities for each plan
+          data.plans.forEach(plan => {
+            console.log(`Processing plan: ${plan.planName}`, plan);
+
+            if (plan.activities && plan.activities.length > 0) {
+              plan.activities.forEach(activity => {
+                console.log(`Processing activity in plan ${plan.planName}:`, activity);
+
+                if (activity.dates && activity.dates.length > 0) {
+                  const activityObj = {
+                    activityId: activity._id || Date.now() + Math.random(), // Generate a unique ID
+                    planName: plan.planName,
+                    habit: activity.habit,
+                    dates: activity.dates,
+                    times: activity.times || Array(activity.dates.length).fill(30),
+                    timeOfDay: activity.timeOfDay,
+                    status: activity.status || Array(activity.dates.length).fill(false)
+                  };
+
+                  console.log("Created activity object:", activityObj);
+                  formattedData.activities.push(activityObj);
+                } else {
+                  console.log("Activity has no dates, skipping", activity);
+                }
+              });
+            } else {
+              console.log(`Plan ${plan.planName} has no activities`);
+            }
+          });
+        }
+
+        console.log("Setting API data:", formattedData);
+        setApiData(formattedData);
+      } else {
+        console.error('Failed to fetch plans:', data.message);
+      }
+
+      // Also fetch habits to use for activity selection
+      const habitsResponse = await fetch(
+        `${API_BASE_URL}/api/getHabits/${userId}`,
+        {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          credentials: 'include'
+        }
+      );
+
+      const habitsData = await habitsResponse.json();
+
+      if (habitsData.success && habitsData.habits) {
+        // Format habits to match our predefined activities structure
+        const formattedHabits = habitsData.habits.map(habit => ({
+          id: habit.habitId,
+          name: habit.habitName,
+          type: habit.habitName, // Using habit name as type
+          icon: '🔄', // Default icon as fallback
+          habitImage: habit.habitImage, // Add the habit image here
+          minDuration: 15,
+          maxDuration: 60
+        }));
+
+        setPredefinedActivities([...formattedHabits]);
+      }
+
+    } catch (error) {
+      console.error('Error fetching plans data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Function to fetch data for a specific week
   const fetchWeekData = (weekOffset) => {
     setLoading(true);
-
-    // In a real application, this would be an API call
-    // For now, we'll just use our mock data and simulate a delay
-    setTimeout(() => {
+    fetchPlansData().then(() => {
       setLoading(false);
-    }, 500);
+    });
   };
+
+  // Fetch plans data when component mounts
+  useEffect(() => {
+    fetchPlansData();
+  }, []);
 
   // Function to navigate to previous week
   const goToPreviousWeek = () => {
@@ -110,35 +256,42 @@ export default function Plans() {
   useEffect(() => {
     // Calculate the start date for the week
     const startDate = getWeekStartDate(currentWeekOffset);
+    console.log(`Week start date for offset ${currentWeekOffset}:`, startDate.toISOString());
 
     // Generate the dates for each day of the week
     const weekDates = generateWeekDates(startDate);
+    console.log("Generated week dates:", weekDates.map(d => d.toISOString()));
     setCurrentWeekDates(weekDates);
 
     // Create the week label
     const label = createWeekLabel(startDate);
+    console.log("Week label:", label);
     setWeekLabel(label);
 
   }, [currentWeekOffset]);
 
   // Effect to update current plans when week dates or API data changes
   useEffect(() => {
-    if (currentWeekDates.length > 0) {
+    if (currentWeekDates.length > 0 && apiData.activities) {
+      // Debug dates to help troubleshoot date mismatches
+      debugDates(currentWeekDates, apiData);
+
       // First convert API data to app format
       const convertedPlans = convertApiDataToAppFormat(apiData, currentWeekDates, timeSlots);
-      
-      // Then filter by active template
+      console.log("Converted plans:", convertedPlans);
+
+      // Then filter by active plan name, not by activity type
       const filteredPlans = convertedPlans.map(dayObj => {
         const filteredDay = {};
         Object.keys(dayObj).forEach(timeSlot => {
-          filteredDay[timeSlot] = dayObj[timeSlot].filter(activity => 
-            activity.type === activePlanTemplate || 
+          filteredDay[timeSlot] = dayObj[timeSlot].filter(activity =>
             activity.planName === activePlanTemplate
           );
         });
         return filteredDay;
       });
-      
+
+      console.log("Filtered plans for active template:", activePlanTemplate, filteredPlans);
       setCurrentPlans(filteredPlans);
     }
   }, [currentWeekDates, apiData, activePlanTemplate]);
@@ -174,110 +327,251 @@ export default function Plans() {
   };
 
   // Function to toggle completion status of an activity
-  const toggleCompletionStatus = (dayIndex, timeSlot, planIndex) => {
+  const toggleCompletionStatusUI = async (dayIndex, timeSlot, planIndex) => {
     // Don't allow toggling completion in edit mode
     if (editMode) return;
 
-    // Create a deep copy of current plans
-    const updatedPlans = JSON.parse(JSON.stringify(currentPlans));
+    try {
+      const token = localStorage.getItem('authToken');
+      if (!token) {
+        console.error('No auth token found');
+        navigate('/login');
+        return;
+      }
 
-    // Toggle the completed status
-    updatedPlans[dayIndex][timeSlot][planIndex].completed =
-      !updatedPlans[dayIndex][timeSlot][planIndex].completed;
+      const decoded = jwtDecode(token);
+      const userId = decoded.userId;
 
-    setCurrentPlans(updatedPlans);
+      // Find the active plan
+      const activePlan = planTemplates.find(t => t.name === activePlanTemplate);
+      if (!activePlan || !activePlan.planId) {
+        throw new Error('No active plan selected');
+      }
 
-    // Update the API data to reflect the changes
-    const activity = updatedPlans[dayIndex][timeSlot][planIndex];
-    const date = currentWeekDates[dayIndex];
-    const dateStr = formatDateForAPI(date);
+      // Get the activity data
+      const activity = currentPlans[dayIndex][timeSlot][planIndex];
 
-    // In a real implementation, you would send the updated status to the backend
-    // For now, we'll just update our mock API data
-    const updatedApiData = updateActivityStatus(
-      apiData,
-      activity.activityId,
-      dateStr,
-      updatedPlans[dayIndex][timeSlot][planIndex].completed
-    );
+      // Update UI immediately for better user experience
+      // Create a deep copy of current plans
+      const updatedPlans = JSON.parse(JSON.stringify(currentPlans));
 
-    setApiData(updatedApiData);
+      // Toggle the completed status
+      updatedPlans[dayIndex][timeSlot][planIndex].completed =
+        !updatedPlans[dayIndex][timeSlot][planIndex].completed;
+
+      setCurrentPlans(updatedPlans);
+
+      // Call the API to toggle the status
+      const dateStr = formatDateForAPI(currentWeekDates[dayIndex]);
+      console.log(`Toggling status for date ${dateStr}, activity:`, activity);
+
+      const response = await toggleActivityStatus(
+        userId,
+        activePlan.planId,
+        activity.habitId,
+        planIndex // Using planIndex as the dateIndex
+      );
+
+      console.log("Toggle status API response:", response);
+
+      // If the API call fails, refresh data to ensure UI is in sync
+      if (!response || !response.success) {
+        await fetchPlansData();
+      }
+
+    } catch (error) {
+      console.error('Error toggling activity status:', error);
+      // Revert UI change if API call failed
+      await fetchPlansData();
+    }
   };
 
   // Function to toggle completion status from popup
-  const togglePopupCompletionStatus = (planIndex) => {
+  const togglePopupCompletionStatusUI = async (planIndex) => {
     // Don't allow toggling completion in edit mode
     if (editMode) return;
 
-    const { dayIndex, timeSlot } = popupContent;
+    try {
+      const { dayIndex, timeSlot } = popupContent;
+      const activity = popupContent.plans[planIndex];
 
-    // Create a deep copy of current plans
-    const updatedPlans = JSON.parse(JSON.stringify(currentPlans));
+      const token = localStorage.getItem('authToken');
+      if (!token) {
+        console.error('No auth token found');
+        navigate('/login');
+        return;
+      }
 
-    // Toggle the completed status
-    updatedPlans[dayIndex][timeSlot][planIndex].completed =
-      !updatedPlans[dayIndex][timeSlot][planIndex].completed;
+      const decoded = jwtDecode(token);
+      const userId = decoded.userId;
 
-    setCurrentPlans(updatedPlans);
+      // Find the active plan
+      const activePlan = planTemplates.find(t => t.name === activePlanTemplate);
+      if (!activePlan || !activePlan.planId) {
+        throw new Error('No active plan selected');
+      }
 
-    // Update the popup content to reflect the change
-    const updatedPopupPlans = [...popupContent.plans];
-    updatedPopupPlans[planIndex].completed = !updatedPopupPlans[planIndex].completed;
+      // Update UI immediately for better user experience
+      // Create a deep copy of current plans
+      const updatedPlans = JSON.parse(JSON.stringify(currentPlans));
 
-    setPopupContent({
-      ...popupContent,
-      plans: updatedPopupPlans
-    });
+      // Toggle the completed status
+      updatedPlans[dayIndex][timeSlot][planIndex].completed =
+        !updatedPlans[dayIndex][timeSlot][planIndex].completed;
 
-    // Update the API data to reflect the changes
-    const activity = updatedPlans[dayIndex][timeSlot][planIndex];
-    const date = currentWeekDates[dayIndex];
-    const dateStr = formatDateForAPI(date);
+      setCurrentPlans(updatedPlans);
 
-    // In a real implementation, you would send the updated status to the backend
-    // For now, we'll just update our mock API data
-    const updatedApiData = updateActivityStatus(
-      apiData,
-      activity.activityId,
-      dateStr,
-      updatedPlans[dayIndex][timeSlot][planIndex].completed
-    );
+      // Update the popup content to reflect the change
+      const updatedPopupPlans = [...popupContent.plans];
+      updatedPopupPlans[planIndex].completed = !updatedPopupPlans[planIndex].completed;
 
-    setApiData(updatedApiData);
+      setPopupContent({
+        ...popupContent,
+        plans: updatedPopupPlans
+      });
+
+      // Call the API to toggle the status
+      const response = await toggleActivityStatus(
+        userId,
+        activePlan.planId,
+        activity.habitId,
+        planIndex
+      );
+
+      // If the API call fails, refresh data to ensure UI is in sync
+      if (!response || !response.success) {
+        await fetchPlansData();
+      }
+
+    } catch (error) {
+      console.error('Error toggling activity status:', error);
+      // Revert UI change if API call failed
+      await fetchPlansData();
+    }
   };
 
   // Function to handle adding a new plan category
-  const handleAddPlan = () => {
+  const handleAddPlan = async () => {
     if (!newPlanName.trim()) return;
 
-    // Create new plan template
-    const newPlanTemplate = {
-      name: newPlanName,
-      icon: '📝', // Default icon
-      plans: []
-    };
+    // Check for duplicate plan names
+    const isDuplicate = planTemplates.some(template =>
+      template.name.toLowerCase() === newPlanName.trim().toLowerCase()
+    );
 
-    // Add new plan template to the list
-    const updatedTemplates = [...planTemplates, newPlanTemplate];
-    setPlanTemplates(updatedTemplates);
-    setActivePlanTemplate(newPlanName);
+    if (isDuplicate) {
+      alert('A plan with this name already exists. Please choose a different name.');
+      return;
+    }
 
-    setNewPlanName('');
-    setShowAddPlanPopup(false);
+    setLoading(true);
+
+    try {
+      // Get the user ID from JWT token
+      const token = localStorage.getItem('authToken');
+      const decoded = jwtDecode(token);
+      const userId = decoded.userId;
+
+      // Create the plan using the service
+      const data = await createPlan(userId, newPlanName);
+
+      if (!data.success) {
+        throw new Error(data.message || 'Failed to create plan');
+      }
+
+      // Create new plan template for the UI
+      const newPlanTemplate = {
+        name: newPlanName,
+        planId: data.plan.planId,
+        plans: []
+      };
+
+      // Add new plan template to the list
+      const updatedTemplates = [...planTemplates, newPlanTemplate];
+      setPlanTemplates(updatedTemplates);
+      setActivePlanTemplate(newPlanName);
+
+      setNewPlanName('');
+      setShowAddPlanPopup(false);
+
+      // Refresh plans data
+      fetchPlansData();
+
+    } catch (error) {
+      console.error('Error creating plan:', error);
+      // Optionally show an error message to the user
+      alert(`Failed to create plan: ${error.message}`);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleDeleteTemplate = (name) => {
-    const filtered = planTemplates.filter(t => t.name !== name);
-    setPlanTemplates(filtered);
+  const handleDeleteTemplate = async (name) => {
+    // Check if this is the last plan
+    if (planTemplates.length <= 1) {
+      alert("You must have at least one plan. Please create a new plan before deleting this one.");
+      return;
+    }
 
-    if (activePlanTemplate === name) {
-      if (filtered.length > 0) {
-        // If we still have templates left, select the first one
-        setActivePlanTemplate(filtered[0].name);
-      } else {
-        // If we deleted the last template, clear the current plan
-        setActivePlanTemplate('');
+    // Custom confirmation dialog with more information
+    const confirmDeleteText = `Are you sure you want to delete the plan "${name}"?\n\nThis will permanently remove the plan and all its activities. This action cannot be undone.`;
+    const confirmDelete = window.confirm(confirmDeleteText);
+
+    if (!confirmDelete) return;
+
+    try {
+      setLoading(true);
+
+      const token = localStorage.getItem('authToken');
+      if (!token) {
+        console.error('No auth token found');
+        navigate('/login');
+        return;
       }
+
+      const decoded = jwtDecode(token);
+      const userId = decoded.userId;
+
+      // Find the plan template to delete
+      const templateToDelete = planTemplates.find(t => t.name === name);
+
+      if (!templateToDelete || !templateToDelete.planId) {
+        throw new Error('Plan not found or missing planId');
+      }
+
+      // Delete the plan using the service
+      const data = await deletePlan(userId, templateToDelete.planId);
+
+      if (!data.success) {
+        throw new Error(data.message || 'Failed to delete plan');
+      }
+
+      // Update UI after successful API response
+      const filtered = planTemplates.filter(t => t.name !== name);
+      setPlanTemplates(filtered);
+
+      // Since we've verified there's more than one plan, we can safely 
+      // switch to another plan if the active one was deleted
+      if (activePlanTemplate === name) {
+        // Select the first plan in the filtered list
+        setActivePlanTemplate(filtered[0].name);
+      }
+
+      // Clear any related data in current plans
+      const updatedApiData = { ...apiData };
+      updatedApiData.activities = updatedApiData.activities.filter(
+        activity => activity.planName !== name
+      );
+      setApiData(updatedApiData);
+
+      // Show success message
+      alert(`Plan "${name}" was successfully deleted.`);
+
+    } catch (error) {
+      console.error('Error deleting plan:', error);
+      alert(`Failed to delete plan: ${error.message}`);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -288,19 +582,81 @@ export default function Plans() {
   };
 
   // Function to save edited plan name
-  const savePlanNameEdit = () => {
-    if (!editedPlanName.trim()) return;
+  const savePlanNameEdit = async () => {
+    if (!editedPlanName.trim()) {
+      alert("Plan name cannot be empty");
+      return;
+    }
 
-    const updatedTemplates = planTemplates.map(template => {
-      if (template.name === activePlanTemplate) {
-        return { ...template, name: editedPlanName };
+    // Check for duplicate plan names
+    const isDuplicate = planTemplates.some(template =>
+      template.name.toLowerCase() === editedPlanName.trim().toLowerCase() &&
+      template.name !== activePlanTemplate
+    );
+
+    if (isDuplicate) {
+      alert('A plan with this name already exists. Please choose a different name.');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const token = localStorage.getItem('authToken');
+      if (!token) {
+        console.error('No auth token found');
+        navigate('/login');
+        return;
       }
-      return template;
-    });
 
-    setPlanTemplates(updatedTemplates);
-    setActivePlanTemplate(editedPlanName);
-    setShowEditPlanNamePopup(false);
+      const decoded = jwtDecode(token);
+      const userId = decoded.userId;
+
+      // Find the plan template to update
+      const templateToUpdate = planTemplates.find(t => t.name === activePlanTemplate);
+
+      if (!templateToUpdate || !templateToUpdate.planId) {
+        throw new Error('Plan not found or missing planId');
+      }
+
+      // Update the plan using the service
+      const data = await updatePlan(userId, templateToUpdate.planId, editedPlanName.trim());
+
+      if (!data.success) {
+        throw new Error(data.message || 'Failed to update plan name');
+      }
+
+      // Update UI with the new plan name
+      const updatedTemplates = planTemplates.map(template => {
+        if (template.name === activePlanTemplate) {
+          return { ...template, name: editedPlanName.trim() };
+        }
+        return template;
+      });
+
+      // Also update any activities that reference this plan name
+      const updatedApiData = { ...apiData };
+      updatedApiData.activities = updatedApiData.activities.map(activity => {
+        if (activity.planName === activePlanTemplate) {
+          return { ...activity, planName: editedPlanName.trim() };
+        }
+        return activity;
+      });
+
+      setPlanTemplates(updatedTemplates);
+      setActivePlanTemplate(editedPlanName.trim());
+      setApiData(updatedApiData);
+      setShowEditPlanNamePopup(false);
+
+      // Show success message
+      alert(`Plan name updated successfully to "${editedPlanName.trim()}"`);
+
+    } catch (error) {
+      console.error('Error updating plan name:', error);
+      alert(`Failed to update plan name: ${error.message}`);
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Function to open edit activity popup
@@ -341,11 +697,13 @@ export default function Plans() {
   // Function to navigate to custom habit creation
   const goToCustomHabitCreation = () => {
     setShowActivitySelectionPopup(false);
-    navigate('/habits/add');
+    navigate('/add-habit');
   };
 
   // Function to save edited activity
-  const saveActivityEdit = () => {
+  // Function to save edited activity
+  // Function to save edited activity
+  const saveActivityEdit = async () => {
     if (!selectedPredefinedActivity || !activityToEdit) return;
 
     const { dayIndex, timeSlot, activityIndex } = activityToEdit;
@@ -353,140 +711,170 @@ export default function Plans() {
 
     if (!selectedActivity) return;
 
-    // Create a deep copy of current plans
-    const updatedPlans = JSON.parse(JSON.stringify(currentPlans));
+    setLoading(true);
 
-    // If editing existing activity
-    if (activityIndex >= 0) {
-      // Update the activity with the selected predefined activity
-      updatedPlans[dayIndex][timeSlot][activityIndex].name = selectedActivity.name;
-      updatedPlans[dayIndex][timeSlot][activityIndex].type = selectedActivity.type;
-      updatedPlans[dayIndex][timeSlot][activityIndex].minDuration = editedMinDuration;
-      updatedPlans[dayIndex][timeSlot][activityIndex].maxDuration = editedMaxDuration;
-    } else {
-      // Add new activity with selected predefined activity
-      const newActivity = {
-        name: selectedActivity.name,
-        completed: false,
-        type: selectedActivity.type,
-        minDuration: editedMinDuration,
-        maxDuration: editedMaxDuration,
-        activityId: Date.now(), // Generate a temporary ID
-        habitId: `temp-${Date.now()}`, // Generate a temporary habit ID
-        dateStr: formatDateForAPI(currentWeekDates[dayIndex])
-      };
+    try {
+      const token = localStorage.getItem('authToken');
+      if (!token) {
+        console.error('No auth token found');
+        navigate('/login');
+        return;
+      }
 
-      updatedPlans[dayIndex][timeSlot].push(newActivity);
+      const decoded = jwtDecode(token);
+      const userId = decoded.userId;
 
-      // In a real app, you would send the new activity to the backend
-      // and update the apiData state with the response
-      // For now, we'll just add it to our mock data
-      const updatedApiData = { ...apiData };
-      updatedApiData.activities.push({
-        activityId: newActivity.activityId,
-        habit: {
-          habitId: newActivity.habitId,
-          habitName: newActivity.name,
-          habitDescription: "",
-          habitImage: ""
-        },
-        dates: [newActivity.dateStr],
-        times: [newActivity.minDuration],
-        timeOfDay: [timeSlot],
-        status: [false]
-      });
-      setApiData(updatedApiData);
-    }
+      // Find the active plan
+      const activePlan = planTemplates.find(t => t.name === activePlanTemplate);
+      if (!activePlan || !activePlan.planId) {
+        throw new Error('No active plan selected');
+      }
 
-    setCurrentPlans(updatedPlans);
+      // Format the date string for the selected day
+      const date = formatDateForAPI(currentWeekDates[dayIndex]);
+      console.log(`Activity date: ${date} for day index ${dayIndex}`);
 
-    if (showPopup) {
       if (activityIndex >= 0) {
+        // Editing existing activity
+        const activity = currentPlans[dayIndex][timeSlot][activityIndex];
+
+        console.log("Updating existing activity:", activity);
+
+        // Check if we're changing the habit (activity type)
+        if (selectedActivity.id !== activity.habitId) {
+          console.log("Changing habit from", activity.habitId, "to", selectedActivity.id);
+
+          // If we're changing to a different habit, we need to:
+          // 1. Delete the old activity
+          // 2. Add a new activity with the new habit
+
+          // First delete the existing activity
+          await deleteActivity(
+            userId,
+            activePlan.planId,
+            activity.habitId,
+            activityIndex
+          );
+
+          // Then add a new activity with the new habit
+          await addActivity(
+            userId,
+            activePlan.planId,
+            selectedActivity.id,
+            date,
+            editedMinDuration,
+            timeSlot,
+            repeatActivity
+          );
+        } else {
+          // Just updating time/timeOfDay of the same habit
+          await updateActivity(
+            userId,
+            activePlan.planId,
+            activity.habitId,
+            activityIndex,
+            {
+              time: editedMinDuration,
+              timeOfDay: timeSlot,
+              repeat: repeatActivity
+            }
+          );
+        }
+      } else {
+        // Adding new activity
+        console.log(`Adding new activity for ${date}, ${timeSlot}:`, selectedActivity);
+        await addActivity(
+          userId,
+          activePlan.planId,
+          selectedActivity.id,
+          date,
+          editedMinDuration,
+          timeSlot,
+          repeatActivity
+        );
+      }
+
+      // Reset states
+      setSelectedPredefinedActivity('');
+      setRepeatActivity(false);
+      setShowEditActivityPopup(false);
+
+      // Also close the overflow popup if it's open
+      setShowPopup(false);
+
+      // Refresh data
+      await fetchPlansData();
+
+    } catch (error) {
+      console.error('Error saving activity:', error);
+      alert(`Failed to save activity: ${error.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Function to delete an activity
+  const deleteActivityUI = async (dayIndex, timeSlot, activityIndex, fromPopup = false) => {
+    // Ask for confirmation
+    const confirmDelete = window.confirm("Are you sure you want to delete this activity?");
+    if (!confirmDelete) return;
+
+    setLoading(true);
+
+    try {
+      const token = localStorage.getItem('authToken');
+      if (!token) {
+        console.error('No auth token found');
+        navigate('/login');
+        return;
+      }
+
+      const decoded = jwtDecode(token);
+      const userId = decoded.userId;
+
+      // Find the active plan
+      const activePlan = planTemplates.find(t => t.name === activePlanTemplate);
+      if (!activePlan || !activePlan.planId) {
+        throw new Error('No active plan selected');
+      }
+
+      // Get the activity to delete
+      const activityToDelete = currentPlans[dayIndex][timeSlot][activityIndex];
+      console.log("Deleting activity:", activityToDelete, "at index", activityIndex);
+
+      // Delete the activity through the API
+      // Send both the habitId and the exact dateIndex to ensure correct deletion
+      await deleteActivity(
+        userId,
+        activePlan.planId,
+        activityToDelete.habitId,
+        activityIndex
+      );
+
+      // If we're in popup view, update the popup content
+      if (fromPopup) {
         const updatedPopupPlans = [...popupContent.plans];
-        updatedPopupPlans[activityIndex].name = selectedActivity.name;
-        updatedPopupPlans[activityIndex].type = selectedActivity.type;
-        updatedPopupPlans[activityIndex].minDuration = editedMinDuration;
-        updatedPopupPlans[activityIndex].maxDuration = editedMaxDuration;
+        updatedPopupPlans.splice(activityIndex, 1);
 
         setPopupContent({
           ...popupContent,
           plans: updatedPopupPlans
         });
-      } else {
-        const newActivity = {
-          name: selectedActivity.name,
-          completed: false,
-          type: selectedActivity.type,
-          minDuration: editedMinDuration,
-          maxDuration: editedMaxDuration,
-          activityId: Date.now(), // Generate a temporary ID
-          habitId: `temp-${Date.now()}`, // Generate a temporary habit ID
-          dateStr: formatDateForAPI(currentWeekDates[popupContent.dayIndex])
-        };
-
-        setPopupContent({
-          ...popupContent,
-          plans: [...popupContent.plans, newActivity]
-        });
       }
-    }
 
-    // Reset states
-    setSelectedPredefinedActivity('');
-    setShowEditActivityPopup(false);
-  };
+      // Close any open popups
+      setShowPopup(false);
 
-  // Function to delete an activity
-  const deleteActivity = (dayIndex, timeSlot, activityIndex, fromPopup = false) => {
-    // Create a deep copy of current plans
-    const updatedPlans = JSON.parse(JSON.stringify(currentPlans));
+      // Refresh plans data
+      await fetchPlansData();
 
-    // Get the activity to delete
-    const activityToDelete = updatedPlans[dayIndex][timeSlot][activityIndex];
-
-    // Remove the activity from the current plans
-    updatedPlans[dayIndex][timeSlot].splice(activityIndex, 1);
-    setCurrentPlans(updatedPlans);
-
-    // In a real app, you would send a delete request to the backend
-    // For now, we'll just update our mock data
-    const updatedApiData = { ...apiData };
-    const activityIndex2 = updatedApiData.activities.findIndex(
-      a => a.activityId === activityToDelete.activityId
-    );
-
-    if (activityIndex2 !== -1) {
-      const dateStr = formatDateForAPI(currentWeekDates[dayIndex]);
-      const dateIndex = updatedApiData.activities[activityIndex2].dates.indexOf(dateStr);
-
-      if (dateIndex !== -1) {
-        // If the activity has multiple dates, just remove this date
-        if (updatedApiData.activities[activityIndex2].dates.length > 1) {
-          updatedApiData.activities[activityIndex2].dates.splice(dateIndex, 1);
-          updatedApiData.activities[activityIndex2].times.splice(dateIndex, 1);
-          updatedApiData.activities[activityIndex2].timeOfDay.splice(dateIndex, 1);
-          updatedApiData.activities[activityIndex2].status.splice(dateIndex, 1);
-        } else {
-          // If this is the only date, remove the entire activity
-          updatedApiData.activities.splice(activityIndex2, 1);
-        }
-      }
-    }
-
-    setApiData(updatedApiData);
-
-    // If deleting from popup view, update the popup content too
-    if (fromPopup) {
-      const updatedPopupPlans = [...popupContent.plans];
-      updatedPopupPlans.splice(activityIndex, 1);
-
-      setPopupContent({
-        ...popupContent,
-        plans: updatedPopupPlans
-      });
+    } catch (error) {
+      console.error('Error deleting activity:', error);
+      alert(`Failed to delete activity: ${error.message}`);
+    } finally {
+      setLoading(false);
     }
   };
-
   // Function to open add activity popup from specific day/timeslot
   const openAddActivityPopup = (dayIndex, timeSlot) => {
     setActivityToEdit({
@@ -588,7 +976,6 @@ export default function Plans() {
             className={`category-item ${activePlanTemplate === template.name ? 'active-category' : ''}`}
             onClick={() => !editMode && handlePlanTemplateClick(template.name)}
           >
-            <div className="category-icon">{template.icon}</div>
             <span>{template.name}</span>
             {editMode && (
               <div className="category-edit-controls">
@@ -681,7 +1068,7 @@ export default function Plans() {
                       <div
                         key={planIndex}
                         className={`plan-item ${plan.completed ? 'completed' : ''}`}
-                        onClick={() => !editMode && toggleCompletionStatus(dayIndex, slot, planIndex)}
+                        onClick={() => !editMode && toggleCompletionStatusUI(dayIndex, slot, planIndex)}
                       >
                         <div className="plan-name">{plan.name}</div>
                         {/* Duration badge */}
@@ -707,7 +1094,7 @@ export default function Plans() {
                               className="delete-plan-btn"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                deleteActivity(dayIndex, slot, planIndex);
+                                deleteActivityUI(dayIndex, slot, planIndex);
                               }}
                             >
                               <Trash2 size={11} />
@@ -758,7 +1145,7 @@ export default function Plans() {
                   <div
                     key={index}
                     className={`popup-plan-item ${plan.completed ? 'completed' : ''}`}
-                    onClick={() => !editMode && togglePopupCompletionStatus(index)}
+                    onClick={() => !editMode && togglePopupCompletionStatusUI(index)}
                   >
                     <span className="popup-plan-name">{plan.name}</span>
                     <span className="popup-plan-type">{plan.type || 'Activity'}</span>
@@ -785,7 +1172,7 @@ export default function Plans() {
                           className="delete-popup-plan-btn"
                           onClick={(e) => {
                             e.stopPropagation();
-                            deleteActivity(popupContent.dayIndex, popupContent.timeSlot, index, true);
+                            deleteActivityUI(popupContent.dayIndex, popupContent.timeSlot, index, true);
                           }}
                         >
                           <Trash2 size={14} />
@@ -864,7 +1251,7 @@ export default function Plans() {
           <div className="popup-content">
             <div className="popup-header">
               <h3>{activityToEdit && activityToEdit.activityIndex >= 0 ? 'Select Activity' : 'Add New Activity'}</h3>
-              <button className="popup-close" onClick={() => setShowActivitySelectionPopup(false)}><X size={18} /></button>
+              <button className="popup-close" onClick={closeActivitySelectionPopup}><X size={18} /></button>
             </div>
             <div className="popup-body">
               <div className="activity-grid">
@@ -874,7 +1261,17 @@ export default function Plans() {
                     className="activity-card"
                     onClick={() => handlePredefinedActivitySelect(activity.id)}
                   >
-                    <div className="activity-icon">{activity.icon}</div>
+                    <div className="activity-image">
+                      {activity.habitImage ? (
+                        <img
+                          src={activity.habitImage}
+                          alt={activity.name}
+                          className="habit-image"
+                        />
+                      ) : (
+                        <div className="activity-icon">{activity.icon || '🔄'}</div>
+                      )}
+                    </div>
                     <div className="activity-name">{activity.name}</div>
                     <div className="activity-type">{activity.type}</div>
                   </div>
@@ -902,7 +1299,7 @@ export default function Plans() {
           <div className="popup-content">
             <div className="popup-header">
               <h3>{activityToEdit && activityToEdit.activityIndex >= 0 ? 'Edit Activity Details' : 'Add Activity Details'}</h3>
-              <button className="popup-close" onClick={() => setShowEditActivityPopup(false)}><X size={18} /></button>
+              <button className="popup-close" onClick={closeEditActivityPopup}><X size={18} /></button>
             </div>
             <div className="popup-body">
               {selectedPredefinedActivity && (
@@ -912,7 +1309,17 @@ export default function Plans() {
                     return (
                       <>
                         <div className="selected-activity-header">
-                          <div className="selected-activity-icon">{activity?.icon}</div>
+                          {activity?.habitImage ? (
+                            <div className="selected-activity-image">
+                              <img
+                                src={activity.habitImage}
+                                alt={activity?.name}
+                                className="habit-image"
+                              />
+                            </div>
+                          ) : (
+                            <div className="selected-activity-icon">{activity?.icon || '🔄'}</div>
+                          )}
                           <div className="selected-activity-name">{activity?.name}</div>
                         </div>
                         <div className="selected-activity-type">{activity?.type}</div>
@@ -989,6 +1396,29 @@ export default function Plans() {
                 </div>
               )}
 
+              {/* Repeat Checkbox with Tooltip */}
+              <div className="form-group repeat-checkbox-container">
+                <div className="repeat-checkbox-wrapper">
+                  <div className="repeat-checkbox-label-group">
+                    <input
+                      type="checkbox"
+                      id="repeatActivity"
+                      checked={repeatActivity}
+                      onChange={(e) => setRepeatActivity(e.target.checked)}
+                      className="repeat-checkbox"
+                    />
+                    <label htmlFor="repeatActivity" className="repeat-label">Repeat weekly</label>
+                  </div>
+                  <div className="repeat-tooltip-container">
+                    <div className="tooltip-icon">
+                      <span className="question-mark">?</span>
+                    </div>
+                    <div className="tooltip-text">
+                      When enabled, this activity will be added to every week for the rest of the year on the same day and time slot.
+                    </div>
+                  </div>
+                </div>
+              </div>
               <button
                 className="edit-activity-button-save"
                 onClick={saveActivityEdit}

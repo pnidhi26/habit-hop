@@ -1,4 +1,4 @@
-const API_BASE_URL = 'https://habitstacker-821782230505.us-west1.run.app/api/user';
+const API_BASE_URL = 'http://localhost:8080/api/user';
 
 export async function getUserInfo() {
     const token = localStorage.getItem('authToken');

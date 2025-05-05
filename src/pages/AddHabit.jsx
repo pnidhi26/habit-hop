@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createHabit } from '../api/habits';
 import { jwtDecode } from 'jwt-decode';
-import './css/Habits.css';
+import '../styles/Habits.css';
 
 const defaultState = {
   habitName: '',
@@ -62,7 +62,7 @@ export default function AddHabit() {
   
       const token = localStorage.getItem('authToken');
       const response = await fetch(
-        `https://habitstacker-821782230505.us-west1.run.app/api/createHabit/${userId}`,
+        `http://localhost:8080/api/createHabit/${userId}`,
         {
           method: 'POST',
           headers: {

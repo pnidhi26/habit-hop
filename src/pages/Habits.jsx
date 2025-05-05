@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { jwtDecode } from 'jwt-decode';
-import './css/Habits.css';
+import '../styles/Habits.css';
 
 export default function Habits() {
   const [habits, setHabits] = useState([]);
@@ -21,7 +21,7 @@ export default function Habits() {
         const decoded = jwtDecode(token);
         const userId = decoded.userId;
         setUserId(userId);
-        const response = await fetch(`https://habitstacker-821782230505.us-west1.run.app/api/getHabits/${userId}`, {
+        const response = await fetch(`http://localhost:8080/api/getHabits/${userId}`, {
           method: 'GET',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -57,7 +57,7 @@ export default function Habits() {
     try {
       const token = localStorage.getItem('authToken');
       const response = await fetch(
-        `https://habitstacker-821782230505.us-west1.run.app/api/removeHabit/${userId}/${habitId}`,
+        `http://localhost:8080/api/removeHabit/${userId}/${habitId}`,
         {
           method: 'DELETE',
           headers: {
