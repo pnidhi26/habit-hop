@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createHabit } from '../api/habits';
 import { jwtDecode } from 'jwt-decode';
-import './css/Habits.css';
+import '../styles/Habits.css';
 
 const defaultState = {
   habitName: '',

@@ -1,4 +1,3 @@
-// dataConverter.js
 /**
  * Utility function to convert API data to app data format
  * @param {Object} apiData - The API data from backend
@@ -7,102 +6,120 @@
  * @returns {Array} - Array of day objects for the current week
  */
 export const convertApiDataToAppFormat = (apiData, weekDates, timeSlots) => {
-    if (!apiData || !weekDates || !timeSlots) {
-      return [];
-    }
-  
-    // Create empty week structure
-    const emptyWeekPlans = weekDates.map(() => {
+    console.log("=== STARTING DATA CONVERSION ===");
+    console.log("Converting API data to app format with weekDates:", weekDates);
+    console.log("Input API data:", apiData);
+    
+    // Initialize the result array - one object per day of the week
+    const result = weekDates.map(() => {
       const dayObj = {};
       timeSlots.forEach(slot => {
         dayObj[slot] = [];
       });
       return dayObj;
     });
-  
-    // Create a map of date strings to day indices for the current week view
-    const dateToIndexMap = {};
-    weekDates.forEach((date, index) => {
-      dateToIndexMap[formatDateForAPI(date)] = index;
-    });
-  
-    // Handle case where apiData is an array of plans or a single plan
-    let activitiesArray = [];
     
-    if (Array.isArray(apiData)) {
-      // Collect all activities from all plans
-      apiData.forEach(plan => {
-        if (plan && plan.activities && Array.isArray(plan.activities)) {
-          // Tag each activity with its parent plan name for reference
-          const planActivities = plan.activities.map(activity => ({
-            ...activity,
-            planName: plan.planName || 'Unnamed Plan'
-          }));
-          activitiesArray = activitiesArray.concat(planActivities);
-        }
-      });
-    } else if (apiData && apiData.activities) {
-      // Handle single plan object
-      activitiesArray = apiData.activities.map(activity => ({
-        ...activity,
-        planName: apiData.planName || 'Unnamed Plan'
-      }));
+    // Check if we have activities to process
+    if (!apiData || !apiData.activities || apiData.activities.length === 0) {
+      console.log("No activities found in API data");
+      return result;
     }
-  
-    // Process all the activities
-    activitiesArray.forEach(activity => {
-      if (!activity.dates || !Array.isArray(activity.dates)) {
+    
+    // Format each date in weekDates to match API date format for comparison
+    const formattedWeekDates = weekDates.map(date => {
+      return formatDateForAPI(date);
+    });
+    
+    console.log("Formatted week dates for comparison:", formattedWeekDates);
+    
+    // Process each activity
+    apiData.activities.forEach(activity => {
+      console.log("Processing activity:", activity);
+      
+      // Skip if activity doesn't have required data
+      if (!activity.dates || !activity.timeOfDay) {
+        console.log("Skipping activity due to missing data:", activity);
         return;
       }
-  
-      activity.dates.forEach((dateStr, idx) => {
-        // Check if this date is in the current week view
-        if (dateStr in dateToIndexMap) {
-          const dayIndex = dateToIndexMap[dateStr];
-          const timeSlot = activity.timeOfDay[idx];
-          const completed = activity.status[idx];
-          const duration = activity.times[idx];
-  
-          if (!timeSlot || !timeSlots.includes(timeSlot)) {
-            return; // Skip if timeSlot is invalid
-          }
-  
-          // Add the activity to the appropriate day and time slot
-          emptyWeekPlans[dayIndex][timeSlot].push({
-            name: activity.habit.habitName,
-            completed: completed,
-            // Use the habit type directly instead of determining it
-            type: activity.habit.type || activity.planName || 'Activity',
-            minDuration: duration,
-            maxDuration: duration,
-            habitId: activity.habit.habitId,
-            activityId: activity.activityId,
-            dateStr: dateStr,
-            description: activity.habit.habitDescription || '',
-            image: activity.habit.habitImage || '',
-            planName: activity.planName || 'Unnamed Plan'
-          });
+      
+      // Get habit information
+      const habitName = activity.habit ? activity.habit.habitName : 'Unknown Activity';
+      const habitId = activity.habit ? activity.habit.habitId : null;
+      
+      console.log(`Activity: ${habitName}, Dates:`, activity.dates);
+      
+      // Process each date in the activity
+      activity.dates.forEach((dateStr, dateIndex) => {
+        console.log(`Processing date ${dateStr} at index ${dateIndex}`);
+        
+        // Find which day of the week this date corresponds to
+        const dayIndex = formattedWeekDates.findIndex(weekDate => {
+          const match = weekDate === dateStr;
+          console.log(`Comparing ${weekDate} with ${dateStr}: ${match ? 'MATCH' : 'no match'}`);
+          return match;
+        });
+        
+        // Skip if date is not in current week
+        if (dayIndex === -1) {
+          console.log(`Date ${dateStr} not in current week, skipping`);
+          return;
         }
+        
+        // Get time slot for this date (handle both array and single value formats)
+        let timeSlot;
+        if (Array.isArray(activity.timeOfDay)) {
+          timeSlot = activity.timeOfDay[dateIndex] || activity.timeOfDay[0];
+        } else {
+          timeSlot = activity.timeOfDay;
+        }
+        
+        // Skip if time slot is not valid
+        if (!timeSlots.includes(timeSlot)) {
+          console.log(`Invalid time slot ${timeSlot} for date ${dateStr}, skipping`);
+          return;
+        }
+        
+        // Get duration for this date (handle both array and single value formats)
+        let minDuration, maxDuration;
+        if (Array.isArray(activity.times)) {
+          minDuration = activity.times[dateIndex] || activity.times[0] || 15;
+          maxDuration = activity.times[dateIndex] || activity.times[0] || 60;
+        } else if (typeof activity.times === 'number') {
+          minDuration = maxDuration = activity.times;
+        } else {
+          minDuration = 15;
+          maxDuration = 60;
+        }
+        
+        // Get completion status (handle both array and boolean formats)
+        let completed;
+        if (Array.isArray(activity.status)) {
+          completed = !!activity.status[dateIndex]; // Convert to boolean
+        } else {
+          completed = !!activity.status; // Convert to boolean
+        }
+        
+        // Create plan item
+        const planItem = {
+          name: habitName,
+          type: habitName, // Using habit name as type
+          planName: activity.planName,
+          minDuration: minDuration,
+          maxDuration: maxDuration,
+          completed: completed,
+          habitId: habitId
+        };
+        
+        console.log(`Adding activity to day ${dayIndex}, time slot ${timeSlot}:`, planItem);
+        
+        // Add to result
+        result[dayIndex][timeSlot].push(planItem);
       });
     });
-  
-    return emptyWeekPlans;
-  };
-  
-  /**
-   * Helper function to determine activity type
-   * @param {Object} activity - The activity object from API
-   * @returns {String} - The activity type
-   */
-  const getActivityType = (activity) => {
-    // This is a placeholder - in a real app, you might determine the type
-    // based on habit properties, categories, or other factors
-    return activity.habit.habitName.includes('Running') || 
-           activity.habit.habitName.includes('Yoga') ||
-           activity.habit.habitName.includes('Gym') ? 'Sports' :
-           activity.habit.habitName.includes('Learning') ||
-           activity.habit.habitName.includes('Reading') ? 'Learning' :
-           'Activity';
+    
+    console.log("Converted result:", result);
+    console.log("=== CONVERSION COMPLETE ===");
+    return result;
   };
   
   /**
@@ -111,7 +128,16 @@ export const convertApiDataToAppFormat = (apiData, weekDates, timeSlots) => {
    * @returns {String} - Formatted date string
    */
   export const formatDateForAPI = (date) => {
-    return date.toISOString().split('T')[0];
+    // Ensure we have a valid date object
+    const d = new Date(date);
+    // Make sure to use UTC methods to avoid timezone issues
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    
+    const formatted = `${year}-${month}-${day}`;
+    console.log(`Formatting date ${d.toISOString()} to ${formatted}`);
+    return formatted;
   };
   
   /**
@@ -130,12 +156,27 @@ export const convertApiDataToAppFormat = (apiData, weekDates, timeSlots) => {
    * @returns {Date} - Start date of the specified week (Monday)
    */
   export const getWeekStartDate = (weekOffset = 0) => {
+    // Create a new date object for today
     const now = new Date();
-    const dayOfWeek = now.getDay() || 7; // Convert Sunday (0) to 7 for easier calculation
-    const mondayOffset = dayOfWeek - 1; // Days to subtract to get to Monday
+    // Get the current day of week (0 = Sunday, 1 = Monday, ..., 6 = Saturday)
+    const dayOfWeek = now.getDay();
     
-    const startDate = new Date(now);
-    startDate.setDate(now.getDate() - mondayOffset + (weekOffset * 7));
+    // Calculate how many days to subtract to get to Monday
+    // If today is Sunday (0), we need to go back 6 days to get to the previous Monday
+    const daysToSubtract = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+    
+    // Create a new date for Monday of the current week
+    const mondayOfCurrentWeek = new Date(now);
+    mondayOfCurrentWeek.setDate(now.getDate() - daysToSubtract);
+    
+    // Reset hours, minutes, seconds, and milliseconds to avoid time-related issues
+    mondayOfCurrentWeek.setHours(0, 0, 0, 0);
+    
+    // Apply the week offset (0 = current week, -1 = previous week, 1 = next week)
+    const startDate = new Date(mondayOfCurrentWeek);
+    startDate.setDate(mondayOfCurrentWeek.getDate() + (weekOffset * 7));
+    
+    console.log(`Week start date for offset ${weekOffset}:`, startDate.toISOString());
     return startDate;
   };
   
@@ -150,8 +191,15 @@ export const convertApiDataToAppFormat = (apiData, weekDates, timeSlots) => {
     for (let i = 0; i < 7; i++) {
       const date = new Date(startDate);
       date.setDate(startDate.getDate() + i);
+      // Make sure time is set to midnight to avoid time-related issues
+      date.setHours(0, 0, 0, 0);
       weekDates.push(date);
     }
+    
+    console.log("Generated week dates:");
+    weekDates.forEach((date, i) => {
+      console.log(`Day ${i+1}:`, date.toISOString(), formatDateForAPI(date));
+    });
     
     return weekDates;
   };
@@ -224,7 +272,7 @@ export const convertApiDataToAppFormat = (apiData, weekDates, timeSlots) => {
     const updatedApiData = { ...apiData };
     
     // Generate a unique activity ID
-    const nextActivityId = Math.max(...updatedApiData.activities.map(a => a.activityId), 0) + 1;
+    const nextActivityId = Math.max(...updatedApiData.activities.map(a => a.activityId || 0), 0) + 1;
     
     // Create the new activity in the API format
     const apiActivity = {
@@ -238,7 +286,8 @@ export const convertApiDataToAppFormat = (apiData, weekDates, timeSlots) => {
       dates: [dateStr],
       times: [newActivity.minDuration],
       timeOfDay: [timeOfDay],
-      status: [false]
+      status: [false],
+      planName: newActivity.planName
     };
     
     updatedApiData.activities.push(apiActivity);

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { jwtDecode } from 'jwt-decode';
-import './css/Habits.css';
+import '../styles/Habits.css';
 
 export default function Habits() {
   const [habits, setHabits] = useState([]);
