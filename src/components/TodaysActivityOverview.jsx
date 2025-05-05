@@ -1,19 +1,18 @@
 import React from 'react';
-import dummyPlan from '../data/dummyPlan';
 
-const today = new Date().toLocaleDateString('sv-SE'); // e.g., "2025-05-03"
+export default function TodaysActivityOverview({ plans }) {
+  const today = new Date().toLocaleDateString('sv-SE'); // e.g., "2025-05-03"
 
-const todayHabitsByPlan = dummyPlan.map(plan => {
-  const filteredActivities = plan.activities.filter(activity =>
-    activity.dates.includes(today)
-  );
-  return {
-    planName: plan.planName,
-    activities: filteredActivities
-  };
-}).filter(plan => plan.activities.length > 0);
+  const todayHabitsByPlan = plans.map(plan => {
+    const filteredActivities = plan.activities.filter(activity =>
+      activity.dates.includes(today)
+    );
+    return {
+      planName: plan.planName,
+      activities: filteredActivities
+    };
+  }).filter(plan => plan.activities.length > 0);
 
-export default function TodaysActivityOverview() {
   return (
     <div className="bg-white shadow-md rounded-2xl p-6 border-2 border-black-500">
       <h2 className="text-xl font-semibold text-purple-500 mb-4">Today's Activity Overview</h2>
