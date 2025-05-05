@@ -8,7 +8,7 @@ export default function SettingNavbar() {
       sx={{
         width: '240px',
         minWidth: '240px',
-        backgroundColor: '#1a202c',
+        backgroundColor: '#000000',
         color: 'white',
         height: '100%',
         paddingTop: '1rem',
@@ -36,8 +36,8 @@ function CustomLink({ to, label }) {
         to={to}
         selected={isActive}
         sx={{
-          color: isActive ? '#90caf9' : 'white',
-          '&:hover': { backgroundColor: '#2d3748' }
+          color: isActive ? '#A855F7' : 'white',
+          '&:hover': { backgroundColor: '#A855F7' }
         }}
       >
         <ListItemText primary={label} />

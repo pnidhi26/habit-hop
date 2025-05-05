@@ -5,8 +5,6 @@ import '../styles/Habits.css';
 
 export default function Habits() {
   const [habits, setHabits] = useState([]);
-  const [showDropdown, setShowDropdown] = useState(false);
-  const [flippedCards, setFlippedCards] = useState({});
   const [deleteMode, setDeleteMode] = useState(false);
   const [userId, setUserId] = useState(null);
   const navigate = useNavigate();
@@ -42,13 +40,6 @@ export default function Habits() {
 
     fetchHabits();
   }, []);
-
-  const toggleFlip = (idx) => {
-    setFlippedCards((prev) => ({
-      ...prev,
-      [idx]: !prev[idx]
-    }));
-  };
 
   const handleDelete = async (habitId) => {
     const confirmed = window.confirm('Are you sure you want to delete this habit?');
@@ -106,7 +97,7 @@ export default function Habits() {
 
         <button
           onClick={() => navigate('/add-habit')}
-          className="bg-indigo-500 text-white px-6 py-2 rounded shadow font-semibold hover:bg-indigo-600"
+          className="bg-purple-500 text-white px-6 py-2 rounded shadow font-semibold hover:bg-indigo-600"
         >
           + Add New Habit
         </button>
@@ -117,10 +108,9 @@ export default function Habits() {
         {habits.map((habit, idx) => (
           <div key={idx} className="flex flex-col items-center">
             <div
-              className="flip-card w-48 h-48 cursor-pointer sm:w-56 sm:h-56 md:w-60 md:h-60"
-              onClick={() => toggleFlip(idx)}
+              className="flip-card w-48 h-48 hover-flip sm:w-56 sm:h-56 md:w-60 md:h-60"
             >
-              <div className={`flip-inner ${flippedCards[idx] ? 'flipped' : ''}`}>
+              <div className="flip-inner">
                 {/* Front */}
                 <div className="flip-front rounded shadow-lg overflow-hidden bg-white">
                   <img
@@ -131,9 +121,9 @@ export default function Habits() {
                 </div>
 
                 {/* Back */}
-                <div className="flip-back bg-white rounded shadow-lg p-4 flex flex-col justify-center items-center text-center">
-                  <h3 className="text-md font-bold text-gray-800">{habit.habitName}</h3>
-                  <p className="text-base text-gray-600 mt-2">{habit.habitDescription}</p>
+                <div className="flip-back bg-purple-600 rounded shadow-lg p-4 flex flex-col justify-center items-center text-center">
+                  <h3 className="text-md font-bold text-white">{habit.habitName}</h3>
+                  <p className="text-base text-white mt-2">{habit.habitDescription}</p>
                 </div>
               </div>
             </div>

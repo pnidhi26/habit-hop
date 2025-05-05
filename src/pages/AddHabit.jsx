@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { createHabit } from '../api/habits';
 import { jwtDecode } from 'jwt-decode';
 import '../styles/Habits.css';
 
@@ -31,6 +30,7 @@ export default function AddHabit() {
     }));
   };
 
+  // eslint-disable-next-line no-unused-vars
   const encodeImage = async (file) => {
     if (!file) return null; 
 

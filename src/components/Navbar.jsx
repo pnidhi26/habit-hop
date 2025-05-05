@@ -55,10 +55,10 @@ export default function Navbar() {
         [`& .MuiDrawer-paper`]: {
           width: drawerWidth,
           boxSizing: 'border-box',
-          backgroundColor: '#1a202c',
+          backgroundColor: '#000000',
           color: 'white',
           height: 'calc(100vh - 64px)',
-          marginTop: '64px'
+          marginTop: '72px'
         },
       }}
     >
@@ -91,11 +91,11 @@ function CustomLink({ to, label, icon }) {
         to={to}
         selected={isActive}
         sx={{
-          color: isActive ? '#90caf9' : 'white',
-          '&:hover': { backgroundColor: '#2d3748' }
+          color: isActive ? '#A855F7' : 'white',
+          '&:hover': { backgroundColor: '#A855F7' }
         }}
       >
-        {icon && <ListItemIcon sx={{ color: isActive ? '#90caf9' : 'white' }}>{icon}</ListItemIcon>}
+        {icon && <ListItemIcon sx={{ color: isActive ? '#A855F7' : 'white' }}>{icon}</ListItemIcon>}
         <ListItemText primary={label} />
       </ListItemButton>
     </ListItem>
