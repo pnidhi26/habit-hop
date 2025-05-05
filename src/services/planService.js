@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://localhost:8080';
+const API_BASE_URL = 'https://habitstacker-821782230505.us-west1.run.app';
 
 // Helper function to get the auth token
 const getAuthToken = () => {

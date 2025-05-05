@@ -20,7 +20,7 @@ import { jwtDecode } from 'jwt-decode';
 import { getPlans, createPlan, updatePlan, deletePlan } from '../services/planService';
 import { addActivity, updateActivity, deleteActivity, toggleActivityStatus } from '../services/activityService';
 
-const API_BASE_URL = 'http://localhost:8080';
+const API_BASE_URL = 'https://habitstacker-821782230505.us-west1.run.app';
 
 // Debug function to help identify date issues
 const debugDates = (weekDates, apiData) => {

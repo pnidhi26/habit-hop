@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://localhost:8080/api/auth';
+const API_BASE_URL = 'https://habitstacker-821782230505.us-west1.run.app/api/auth';
 
 export const updateUserProfile = async (form) => {
   const formData = new FormData();

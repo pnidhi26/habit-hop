@@ -8,7 +8,7 @@ export async function createHabit(payload, userId) {
     throw new Error('No token found');
   }
 
-  const res = await fetch(`http://localhost:8080/api/createHabit/${userId}`, {
+  const res = await fetch(`https://habitstacker-821782230505.us-west1.run.app/api/createHabit/${userId}`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

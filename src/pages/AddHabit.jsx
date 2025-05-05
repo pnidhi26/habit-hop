@@ -62,7 +62,7 @@ export default function AddHabit() {
   
       const token = localStorage.getItem('authToken');
       const response = await fetch(
-        `http://localhost:8080/api/createHabit/${userId}`,
+        `https://habitstacker-821782230505.us-west1.run.app/api/createHabit/${userId}`,
         {
           method: 'POST',
           headers: {
