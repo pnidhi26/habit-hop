@@ -1,62 +1,42 @@
-import React, { useState } from 'react';
-import dummyPlans from '../data/dummyPlan';
+import React, { useState, useEffect } from 'react';
 
-const today = new Date().toLocaleDateString('sv-SE'); // "2025-05-03"
+const today = new Date().toLocaleDateString('sv-SE'); // e.g., "2025-05-03"
 
-export default function CompletedHabitsBox() {
-  const [selectedPlan, setSelectedPlan] = useState(dummyPlans[0]?.planName || '');
-  const [plans, setPlans] = useState(dummyPlans);
+export default function CompletedHabitsBox({ plans, onToggleStatus }) {
+  const [selectedPlan, setSelectedPlan] = useState('');
+
+  useEffect(() => {
+    if (plans.length > 0) {
+      setSelectedPlan(plans[0].planName);
+    }
+  }, [plans]);
 
   const handleSelectPlan = (e) => {
     setSelectedPlan(e.target.value);
   };
 
-  const handleToggle = (activityId, index) => {
-    const updatedPlans = plans.map(plan => {
-      if (plan.planName !== selectedPlan) return plan;
-
-      const updatedActivities = plan.activities.map(activity => {
-        if (activity.activityId !== activityId) return activity;
-
-        const newStatus = [...activity.status];
-        newStatus[index] = !newStatus[index];
-
-        return {
-          ...activity,
-          status: newStatus
-        };
-      });
-
-      return {
-        ...plan,
-        activities: updatedActivities
-      };
-    });
-
-    setPlans(updatedPlans);
-  };
-
   const selectedPlanData = plans.find(plan => plan.planName === selectedPlan);
+  const planIndex = plans.findIndex(plan => plan.planName === selectedPlan);
 
   const todayActivities = selectedPlanData
-    ? selectedPlanData.activities.flatMap(activity =>
-        activity.dates.map((date, index) => ({
-          activityId: activity.activityId,
-          habit: activity.habit,
-          date,
-          index,
-          timeOfDay: activity.timeOfDay[index],
-          time: activity.times[index],
-          status: activity.status[index]
-        }))
-      ).filter(entry => entry.date === today)
-    : [];
+  ? selectedPlanData.activities.flatMap((activity, activityIndex) =>
+      activity.dates.map((date, dateIndex) => ({
+        activityIndex, // 👈加上这个
+        activityId: activity.activityId,
+        habit: activity.habit,
+        date,
+        dateIndex,
+        status: activity.status[dateIndex]
+      }))
+    ).filter(entry => entry.date === today)
+  : [];
+
 
   return (
     <div className="bg-white rounded-lg shadow-md p-6 border-2 border-black-500 relative cursor-default">
       <h2 className="text-2xl text-purple-500 mb-4">Today's Completed Habits</h2>
 
-      {/* Plan selector (right top corner) */}
+      {/* Plan Selector */}
       <div className="absolute top-6 right-6">
         <select
           value={selectedPlan}
@@ -84,7 +64,13 @@ export default function CompletedHabitsBox() {
               <input
                 type="checkbox"
                 checked={entry.status}
-                onChange={() => handleToggle(entry.activityId, entry.index)}
+                onChange={() =>
+                  onToggleStatus(
+                    planIndex,
+                    entry.activityId,
+                    entry.dateIndex
+                  )
+                }
                 className="ml-4 w-6 h-6 text-purple-500 focus:ring-purple-400 border-gray-300 rounded transition-transform duration-200 ease-in-out transform hover:scale-110 active:scale-95"
               />
             </li>
