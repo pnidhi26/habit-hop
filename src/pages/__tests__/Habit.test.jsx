@@ -1,56 +1,93 @@
-import React from 'react';
-import { render, screen } from '@testing-library/react';
+// src/pages/__tests__/Habit.test.jsx
+
+import '@testing-library/jest-dom';
+import {
+  render,
+  screen,
+  fireEvent,
+  waitForElementToBeRemoved,
+} from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import Habits from '../Habits';
 
+// always “log in” as user 123
+jest.mock('jwt-decode', () => {
+  const decode = () => ({ userId: '123' });
+  return { __esModule: true, default: decode, jwtDecode: decode };
+});
 
-describe('Habits Page', () => {
-  test('renders all predefined habit names (each appears twice)', () => {
-    render(<Habits />, { wrapper: MemoryRouter });
+const initialHabits = {
+  success: true,
+  habits: [
+    {
+      habitId: '1',
+      habitName: 'Yoga',
+      habitDescription: 'Morning stretch',
+      habitImage: 'https://example.com/yoga.jpg',
+    },
+  ],
+};
 
-    const habitNames = [
-      'Yoga',
-      'Gym',
-      'Meditation',
-      'Walking',
-      'Reading',
-      'Stretching',
-      'Earthing',
-      'Cycling',
-      'Dancing',
-      'Drinking water',
-      'Journaling',
-      'Skincare',
-      'Digital Detox',
-      'Cleaning/Chores',
-      'Cooking',
-    ];
+describe('<Habits />', () => {
+  beforeEach(() => {
+    localStorage.setItem('authToken', 'fake.jwt.token');
 
-    habitNames.forEach((name) => {
-      // card-back title + caption under the card
-      expect(screen.getAllByText(name)).toHaveLength(2);
-    });
+    // 1) initial load
+    // 2) delete call
+    // 3) refetch yields empty list
+    jest.spyOn(global, 'fetch')
+      .mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve(initialHabits),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ success: true }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ success: true, habits: [] }),
+      });
+
+    // silence JS alerts & confirm
+    jest.spyOn(window, 'alert').mockImplementation(() => {});
+    jest.spyOn(window, 'confirm').mockReturnValue(true);
   });
 
-  test('renders habit descriptions when cards are flipped (descriptions are in the DOM)', () => {
-    render(<Habits />, { wrapper: MemoryRouter });
-
-    const descriptions = [
-      'Improve flexibility and calm your mind through controlled poses and breathing.',
-      'Build strength and stamina with weight training and cardio workouts.',
-      'Reduce stress and improve focus through mindful breathing.',
-    ];
-
-    descriptions.forEach((text) => {
-      expect(screen.getByText(text)).toBeInTheDocument();
-    });
+  afterEach(() => {
+    jest.restoreAllMocks();
+    localStorage.clear();
   });
 
-  test('renders all action buttons', () => {
-    render(<Habits />, { wrapper: MemoryRouter });
+  test('renders the habit returned from the API', async () => {
+    render(
+      <MemoryRouter>
+        <Habits />
+      </MemoryRouter>
+    );
 
-    expect(screen.getByRole('button', { name: /select/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /join habit/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /\+ add new habit/i })).toBeInTheDocument();
+    // wait for the image to appear
+    const yogaImg = await screen.findByAltText(/yoga/i);
+    expect(yogaImg).toBeInTheDocument();
+  });
+
+  test('deletes the habit after confirmation', async () => {
+    render(
+      <MemoryRouter>
+        <Habits />
+      </MemoryRouter>
+    );
+
+    // first, wait for it to render
+    const yogaImg = await screen.findByAltText(/yoga/i);
+
+    // enter delete mode
+    fireEvent.click(screen.getByRole('button', { name: /delete habit/i }));
+    // click the per-card Delete button
+    fireEvent.click(screen.getByRole('button', { name: /^delete$/i }));
+
+    // now it should vanish
+    await waitForElementToBeRemoved(yogaImg);
+    expect(screen.queryByAltText(/yoga/i)).not.toBeInTheDocument();
   });
 });
