@@ -1,141 +1,148 @@
+/**
+ * @jest-environment jsdom
+ */
+
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { MemoryRouter } from 'react-router-dom';
 import Dashboard from '../Dashboard';
-import { getUserInfo } from '../../api/userApi';
 
-// Mock the modules
+/* ------------------------------------------------------------------ *
+ *  MOCKS
+ * ------------------------------------------------------------------ */
 const mockNavigate = jest.fn();
-jest.mock('react-router-dom', () => ({
-  ...jest.requireActual('react-router-dom'),
-  useNavigate: () => mockNavigate
+
+jest.mock('react-router-dom', () => {
+  const real = jest.requireActual('react-router-dom');
+  return { __esModule: true, ...real, useNavigate: () => mockNavigate };
+});
+
+jest.mock('jwt-decode', () => ({
+  __esModule: true,
+  jwtDecode: () => ({ userId: 'U‑123', username: 'Bob' }),
 }));
 
-jest.mock('../../api/userApi', () => ({
-  getUserInfo: jest.fn()
-}));
+jest.mock('../../components/TodaysActivityOverview', () => () => (
+  <div data-testid="todays-activity">Today's Activity Overview</div>
+));
 
-jest.mock('../../components/CompletedHabitsSection', () => {
-  return function MockCompletedHabitsBox() {
-    return <div data-testid="completed-habits-box">Completed Habits Box</div>;
-  };
+jest.mock('../../components/WeeklyReport', () => () => (
+  <div data-testid="weekly-report">Weekly Report</div>
+));
+
+
+global.fetch = jest.fn(() =>
+  Promise.resolve({ json: () => Promise.resolve({ success: true, plans: [] }) }),
+);
+
+Object.defineProperty(window, 'localStorage', {
+  writable: true,
+  value: {
+    getItem: () => 'fake-token',
+    setItem: () => {},
+    clear: () => {},
+  },
 });
 
-jest.mock('../../components/WeeklyReport', () => {
-  return function MockWeeklyReport() {
-    return <div data-testid="weekly-report">Weekly Report</div>;
+/* ------------------------------------------------------------------ *
+ *  HELPERS
+ * ------------------------------------------------------------------ */
+const freezeTime = (iso) => {
+  const RealDate = Date;
+  global.Date = class extends RealDate {
+    constructor(...a) {
+      return a.length ? new RealDate(...a) : new RealDate(iso);
+    }
+    static now() {
+      return new RealDate(iso).getTime();
+    }
   };
-});
+  return () => (global.Date = RealDate);
+};
 
-jest.mock('../../components/TodaysActivityOverview', () => {
-  return function MockTodaysActivityOverview() {
-    return <div data-testid="todays-activity">Today's Activity Overview</div>;
-  };
-});
+/* ------------------------------------------------------------------ *
+ *  TESTS
+ * ------------------------------------------------------------------ */
+describe('Dashboard page', () => {
+  beforeEach(() => jest.clearAllMocks());
 
-describe('Dashboard Component', () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
-  });
-
-  test('renders dashboard with title', () => {
-    getUserInfo.mockResolvedValueOnce({});
-    
+  it('renders heading', () => {
     render(
       <MemoryRouter>
         <Dashboard />
-      </MemoryRouter>
+      </MemoryRouter>,
     );
-    
     expect(screen.getByRole('heading', { name: /dashboard/i })).toBeInTheDocument();
   });
 
-  test('displays current date', () => {
-    getUserInfo.mockResolvedValueOnce({});
-    
-    // Mock Date to have consistent test results
-    const mockDate = new Date('2025-05-04T10:30:00');
-    const originalDate = global.Date;
-    global.Date = jest.fn(() => mockDate);
-    global.Date.toLocaleString = originalDate.toLocaleString;
-    
+  it('prints today’s date (fixed)', () => {
+    const restore = freezeTime('2025-05-04T10:30:00');
     render(
       <MemoryRouter>
         <Dashboard />
-      </MemoryRouter>
+      </MemoryRouter>,
     );
-    
-    expect(screen.getByText(/Sunday, May 4, 2025/i)).toBeInTheDocument();
-    
-    // Restore the original Date
-    global.Date = originalDate;
+    expect(screen.getByText(/Sunday.*4.*May.*2025.*10:30/i)).toBeInTheDocument();
+    restore();
   });
 
-  test('renders all component sections', () => {
-    getUserInfo.mockResolvedValueOnce({});
-    
+  it('renders all main sections', async () => {
     render(
       <MemoryRouter>
         <Dashboard />
-      </MemoryRouter>
+      </MemoryRouter>,
     );
-    
-    expect(screen.getByTestId('todays-activity')).toBeInTheDocument();
-    expect(screen.getByTestId('completed-habits-box')).toBeInTheDocument();
-    expect(screen.getByTestId('weekly-report')).toBeInTheDocument();
+    expect(await screen.findByTestId('todays-activity')).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: /today's completed habits/i }))
+      .toBeInTheDocument();
+    expect(await screen.findByTestId('weekly-report')).toBeInTheDocument();
   });
 
-  test('displays welcome message with username when user data loads', async () => {
-    const mockUserData = { username: 'TestUser' };
-    getUserInfo.mockResolvedValueOnce(mockUserData);
-    
+  it('greets user by name', async () => {
     render(
       <MemoryRouter>
         <Dashboard />
-      </MemoryRouter>
+      </MemoryRouter>,
     );
+    expect(
+      await screen.findByText(/welcome to your main dashboard,\s*Bob!/i),
+    ).toBeInTheDocument();
   });
 
-  test('displays generic welcome message when user data is not loaded', () => {
-    getUserInfo.mockResolvedValueOnce(null);
-    
+  it('shows generic greeting when no token', async () => {
+    window.localStorage.getItem = () => null; // simulate logged‑out
     render(
       <MemoryRouter>
         <Dashboard />
-      </MemoryRouter>
+      </MemoryRouter>,
     );
-    
-    expect(screen.getByText(/Welcome to your main dashboard!/i)).toBeInTheDocument();
+    expect(
+      await screen.findByText(/welcome to your main dashboard!/i),
+    ).toBeInTheDocument();
   });
 
-  test('navigates to habits page when Quick Add button is clicked', () => {
-    getUserInfo.mockResolvedValueOnce({});
-    
+  it('navigates to /habits on “Quick Add”', async () => {
     render(
       <MemoryRouter>
         <Dashboard />
-      </MemoryRouter>
+      </MemoryRouter>,
     );
-    
-    const quickAddButton = screen.getByRole('button', { name: /quick add habit/i });
-    fireEvent.click(quickAddButton);
-    
+    fireEvent.click(await screen.findByRole('button', { name: /quick add habit/i }));
     expect(mockNavigate).toHaveBeenCalledWith('/habits');
   });
 
-  test('handles API error gracefully', async () => {
-    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
-    getUserInfo.mockRejectedValueOnce(new Error('Failed to fetch user data'));
-    
+  it('handles API failure gracefully', async () => {
+    global.fetch.mockImplementationOnce(() =>
+      Promise.resolve({ json: () => Promise.resolve({ success: false }) }),
+    );
     render(
       <MemoryRouter>
         <Dashboard />
-      </MemoryRouter>
+      </MemoryRouter>,
     );
-    
-    expect(screen.getByText(/Welcome to your main dashboard!/i)).toBeInTheDocument();
-    
-    consoleErrorSpy.mockRestore();
+    expect(
+      await screen.findByText(/welcome to your main dashboard!/i),
+    ).toBeInTheDocument();
   });
 });
