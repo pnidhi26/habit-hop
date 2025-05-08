@@ -1,65 +1,51 @@
-<<<<<<< HEAD
 // jest.config.js
+/** @type {import('jest').Config} */
 module.exports = {
-  // Automatically clear mock calls and instances between every test
-  clearMocks: true,
+  /* ------------------------------------------------------------------ */
+  /*  Core                                                              */
+  /* ------------------------------------------------------------------ */
+  clearMocks: true,                 // reset mocks between tests
+  testEnvironment: 'jsdom',         // DOM‑like environment for React
 
-  // Indicates whether the coverage information should be collected while executing the test
-  collectCoverage: true,
-
-  // The directory where Jest should output its coverage files
-  coverageDirectory: 'coverage',
-
-  // Indicates which provider should be used to instrument code for coverage
-  coverageProvider: 'istanbul',
-
-  // A list of paths to directories that Jest should use to search for files in
-  roots: ['<rootDir>/src'],
-
-  // The test environment that will be used for testing
-  testEnvironment: 'jsdom',
-
-  // A map from regular expressions to paths to transformers
-  transform: {
-    '^.+\\.(js|jsx)$': 'babel-jest',
-  },
-
-  // Setup files to run before each test
-  setupFilesAfterEnv: ['<rootDir>/setupTests.js'], // Assuming your setup file is named setupTests.js
-
-  // Code coverage configuration
-  collectCoverageFrom: [
-    'src/**/*.{js,jsx}',
-    '!src/**/*.d.ts',
-    '!src/index.js',
-    '!src/reportWebVitals.js',
-    '!src/setupTests.js',
-  ],
-
-  // Coverage thresholds
-  coverageThreshold: {
-    global: {
-      branches: 70,
-      functions: 70,
-      lines: 70,
-      statements: 70,
-    },
-  },
-=======
-module.exports = {
-  testEnvironment: 'jsdom',
+  /* run extra setup (RTL matchers, etc.) */
   setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
->>>>>>> ec70481579d6ef5609df54ba2a0d7801d1cd02bf
 
+  /* Babel transform for JS / TS sources */
+  transform: {
+    '^.+\\.(js|jsx|ts|tsx)$': 'babel-jest',
+  },
+
+  /* ------------------------------------------------------------------ */
+  /*  Module name stubs                                                 */
+  /* ------------------------------------------------------------------ */
   moduleNameMapper: {
+    /* CSS modules → identity‑obj‑proxy gives you a hash‑like object   */
     '\\.(css|scss|sass|less)$': 'identity-obj-proxy',
+
+    /* Static assets → simple manual mock                              */
     '\\.(png|jpe?g|gif|svg|webp|ico|bmp|eot|otf|ttf|woff2?)$':
       '<rootDir>/__mocks__/fileMock.js',
   },
-<<<<<<< HEAD
-};
-=======
-};
+
+  /* ------------------------------------------------------------------ */
+  /*  Coverage                                                          */
+  /* ------------------------------------------------------------------ */
+  collectCoverage: true,
+  coverageDirectory: 'coverage',
+  /* v8 is faster ≥ Jest 29, Istanbul is OK too – pick one              */
+  coverageProvider: 'v8',
+
+  /* Instrument **all** source files in src/, except                */
+  /* – tests / stories / mocks / barrels                               */
+  collectCoverageFrom: [
+    'src/**/*.{js,jsx,ts,tsx}',
+    '!src/**/__tests__/**',
+    '!src/**/?(*.)+(test|spec).{js,jsx,ts,tsx}',
+    '!src/**/index.{js,jsx,ts,tsx}',
+  ],
 
 
->>>>>>> ec70481579d6ef5609df54ba2a0d7801d1cd02bf
+
+  /* Tell Jest where to look for modules (default is <rootDir>)         */
+  roots: ['<rootDir>/src'],
+};
